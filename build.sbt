@@ -1,4 +1,4 @@
-name := "qseq"
+name := "quasar-spark-connector"
 
 version := "1.0"
 

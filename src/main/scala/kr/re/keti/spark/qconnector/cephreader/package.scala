@@ -1,11 +1,12 @@
 package kr.re.keti.spark.qconnector
 
 import java.io.File
-import java.math.BigInteger
 import java.util.UUID
+
 import com.ceph.rados.{IoCTX, Rados}
-import com.google.common.primitives.{UnsignedInteger, UnsignedLong}
-import kr.re.keti.spark.qconnector.quasar.types.Coreblock
+import kr.re.keti.spark.qconnector.quasar.types.{Coreblock, Vectorblock}
+import kr.re.keti.spark.qconnector.quasar.{Bad, Core, Vector}
+
 
 /** Contains [[kr.re.keti.spark.qconnector]] class that is the main entry point for
   * analyzing Quasar data from Spark. */
@@ -43,10 +44,6 @@ package object cephreader {
   val R_ADDRMASK = 0xFFFFFFFFFFF00000L //^((uint64(1) << 20) - 1)
   val R_OFFSETMASK = 0xFFFFF           //  (uint64(1) << 20) - 1
 
-  val Vector = 1
-  val Core = 2
-  val Bad = 255
-
   val nibbles:Array[Char] = Array[Char]('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f')
 
   def DatablockGetBufferType(buf:Array[Byte]) = {
@@ -58,7 +55,7 @@ package object cephreader {
   }
 
 
-  def make_object_id(uuid:UUID, address:UnsignedLong) : String = {
+  def make_object_id(uuid:UUID, address:Long) : String = {
 
     val uid = uuid.toString.replace("-","").toCharArray
     val dest:Array[Char] = new Array[Char](OID_SIZE)
@@ -71,7 +68,7 @@ package object cephreader {
 
     for (i <- 0 until 10)
     {
-      val nidx = ( address.longValue >> (4*(9 - i)) ) & 0xF
+      val nidx = ( address >>> (4*(9 - i)) ) & 0xF
       dest(32+i) = nibbles(nidx.toInt)
     }
 
@@ -80,15 +77,15 @@ package object cephreader {
     dest.mkString
   }
 
-  def handle_read(uuid:UUID, address:UnsignedLong, len:Int) : Array[Byte] = {
+  def handle_read(uuid:UUID, address:Long, len:Int) : Array[Byte] = {
 
     //The ceph provider uses 24 bits of address per object, and the top 40 bits as an object ID
-    val offset = address.longValue & 0xFFFFFF
-    val id = address.longValue >> 24
-    val oid = make_object_id(uuid, UnsignedLong.valueOf(id))
+    val offset = address & 0xFFFFFF
+    val id:Long = (address >>> 24) & 0x000000FFFFFFFFFFL
+    val oid = make_object_id(uuid, id)
 
     //handle_read :: uuid[20] (.CG_SYSTEM_REACT5359) | address 0x3008100000 | len 1048576 | offset 1048576 | id 0x3008 | oid 2e43475f53595354454d5f52454143540000003008
-    println("handle_read :: uuid[" + uuid.toString.length + "] (" + uuid.toString + ") | address " + address.toString(16) + " | len " + len.toString +  " | offset " + offset.toString + " | id " + UnsignedLong.valueOf(id).toString(16) + " | oid " + oid )
+    println("handle_read :: uuid[" + uuid.toString.length + "] (" + uuid.toString + ") | address " + address.toHexString + " | len " + len.toString +  " | offset " + offset.toString + " | id " + id.toHexString + " | oid " + oid )
 
     val cluster: Rados = new Rados("admin")
     println("Created cluster handle.")
@@ -117,36 +114,30 @@ package object cephreader {
     buf.slice(0, rv)
   }
 
-  def obtainChunk(uuid:UUID, address:UnsignedLong) : Array[Byte] = {
+  def obtainChunk(uuid:UUID, address:Long) : Array[Byte] = {
     handle_read(uuid, address, R_CHUNKSIZE)
   }
 
-  def Read(uuid:UUID, address:UnsignedLong) = {
+  def Read(uuid:UUID, address:Long) = {
 
-    val rv:Array[Byte] = obtainChunk(uuid, UnsignedLong.valueOf(address.longValue() & R_ADDRMASK))
-    var chunk1:Array[Byte] = rv.slice((address.longValue() & R_OFFSETMASK).toInt, rv.length)
+    val rv:Array[Byte] = obtainChunk(uuid, (address & R_ADDRMASK))
+    var chunk1:Array[Byte] = rv.slice((address & R_OFFSETMASK).toInt, rv.length)
 
     var chunk2:Array[Byte] = null
     var ln:Int = 0
 
-    if (false) {
-      val addr = UnsignedLong.valueOf(address.plus(UnsignedLong.valueOf(R_CHUNKSIZE)).longValue() & R_ADDRMASK)
-      println("Read Chunk1 : " + chunk1.map("%02X" format _).mkString.toLowerCase)
-      println("Addr check : 0x" + addr.toString(16))
-    }
-
     if (chunk1.length < 2) {
       //not even long enough for the prefix, must be one byte in the first chunk, one in teh second
-      val addr = UnsignedLong.valueOf(address.plus(UnsignedLong.valueOf(R_CHUNKSIZE)).longValue() & R_ADDRMASK)
+      val addr = ((address + R_CHUNKSIZE) & R_ADDRMASK)
       chunk2 = obtainChunk(uuid, addr)
 
-      ln = chunk1(0).toInt + (chunk2(0).toInt << 8)
+      ln = (chunk1(0).toInt & 0xFF) + ((chunk2(0).toInt & 0xFF) << 8)
       chunk2 = chunk2.slice(1, chunk2.length)
       chunk1 = chunk1.slice(1, chunk1.length)
 
     } else {
 
-      ln = chunk1(0).toInt + (chunk1(1).toInt << 8)
+      ln = (chunk1(0).toInt & 0xFF) + ((chunk1(1).toInt & 0xFF) << 8)
       chunk1 = chunk1.slice(2, chunk1.length)
     }
 
@@ -178,7 +169,7 @@ package object cephreader {
 
       //We need some bytes from chunk2
       if (chunk2 == null) {
-        val addr = UnsignedLong.valueOf(address.plus(UnsignedLong.valueOf(R_CHUNKSIZE)).longValue() & R_ADDRMASK)
+        val addr = ((address + R_CHUNKSIZE) & R_ADDRMASK)
         chunk2 = obtainChunk(uuid, addr)
       }
 
@@ -197,26 +188,43 @@ package object cephreader {
     buffer
   }
 
-  def ReadDatablock(uuid:UUID, addr:UnsignedLong, impl_Generation:UnsignedLong, impl_Pointwidth:UnsignedInteger, impl_StartTime:Long) =  {
+  def ReadDatablock(uuid:UUID, addr:Long, impl_Generation:Long, impl_Pointwidth:Int, impl_StartTime:Long) =  {
 
     val trimbuf:Array[Byte] = Read(uuid, addr)
 
-    var rv = null
+    println("trimbuf : " + trimbuf.mkString)
+
     DatablockGetBufferType(trimbuf) match {
       case Core => {
-        rv = new Coreblock(
+        val rv:Coreblock = new Coreblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
+        rv.Deserialize(trimbuf)
 
-        )
 
+
+        println("Addr : " + rv.Addr.map("%s | " format _.toString).mkString)
+        println("Count : " + rv.Count.map("%s | " format _.toString).mkString)
+        println("Min : " + rv.Min.map("%s | " format _.toString).mkString)
+        println("Mean : " + rv.Mean.map("%s | " format _.toString).mkString)
+        println("Max : " + rv.Max.map("%s | " format _.toString).mkString)
+        println("CG : " + rv.CGeneration.map("%s | " format _.toString).mkString)
+
+
+
+        rv
       }
       case Vector => {
+        val rv = new Vectorblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
+        rv.Deserialize(trimbuf)
 
+        println("Read final : " + rv.Time.map("%d" format _).mkString)
+
+
+        rv
+      }
+      case default => {
+        throw new Exception("Strange datablock type")
       }
     }
-
   }
-
-
-
 
 }

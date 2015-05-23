@@ -2,7 +2,6 @@ package kr.re.keti.spark.qconnector.quasar.types
 
 import java.util.UUID
 
-import com.google.common.primitives.UnsignedLong
 import org.bson.Document
 
 /**
@@ -10,14 +9,14 @@ import org.bson.Document
  */
 class Superblock(
   val uuid:UUID,
-  val gen:UnsignedLong,
-  val root:UnsignedLong,
+  val gen:Long,
+  val root:Long,
   val unlinked:Boolean) {
 
   def this(document:Document) = {
     this( UUID.fromString(document.get("uuid").toString),
-          UnsignedLong.valueOf(document.get("gen").toString),
-          UnsignedLong.valueOf(document.get("root").toString),
+          document.get("gen").toString.toLong,
+          document.get("root").toString.toLong,
           document.get("unlinked").toString.toBoolean)
   }
 

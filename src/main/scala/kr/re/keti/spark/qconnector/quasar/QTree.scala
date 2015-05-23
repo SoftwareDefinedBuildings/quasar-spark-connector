@@ -1,8 +1,7 @@
 package kr.re.keti.spark.qconnector.quasar
 
-import com.google.common.primitives.{UnsignedInteger, UnsignedLong}
-import kr.re.keti.spark.qconnector.quasar.types.{Generation, Superblock,StatRecord}
 import kr.re.keti.spark.qconnector.cephreader.ReadDatablock
+import kr.re.keti.spark.qconnector.quasar.types.{Generation, StatRecord, Superblock}
 
 /**
  * Created by almightykim on 5/10/15.
@@ -32,9 +31,9 @@ class QTree (
   }
 
   @throws(classOf[Exception])
-  def LoadNode(addr:UnsignedLong , impl_Generation:UnsignedLong , impl_Pointwidth:UnsignedInteger, impl_StartTime:Long) : QTreeNode = {
+  def LoadNode(addr:Long , impl_Generation:Long , impl_Pointwidth:Int, impl_StartTime:Long) : QTreeNode = {
 
-    println("LoadNode() addr " + addr.toString(16) + " | impl_Generation " + impl_Generation.toString() +  " | impl_Pointwidth " + impl_Pointwidth.toString +  " | impl_StartTime " + impl_Pointwidth.toString(16))
+    println("LoadNode() addr " + addr.toHexString + " | impl_Generation " + impl_Generation.toString() +  " | impl_Pointwidth " + impl_Pointwidth.toString +  " | impl_StartTime " + impl_Pointwidth.toString)
 
     val db = ReadDatablock(sb.uuid, addr, impl_Generation, impl_Pointwidth, impl_StartTime)
 
@@ -62,7 +61,7 @@ class QTree (
   }
 
   @throws(classOf[Exception])
-  def QueryStatisticalValuesBlock(start:Long, end:Long, gen:UnsignedLong, pointwidth:UnsignedInteger) : Array[StatRecord] = {
+  def QueryStatisticalValuesBlock(start:Long, end:Long, gen:Long, pointwidth:Int) : Array[StatRecord] = {
 
     val rv = new Array[StatRecord](0)
 

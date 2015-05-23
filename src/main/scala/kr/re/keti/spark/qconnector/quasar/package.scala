@@ -1,8 +1,8 @@
 package kr.re.keti.spark.qconnector
 
-import java.util.{UUID, HashMap}
-import com.google.common.primitives.{UnsignedBytes, UnsignedInteger, UnsignedLong}
-import com.mongodb.client.{FindIterable, MongoCollection, MongoDatabase}
+import java.util.{HashMap, UUID}
+
+import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import kr.re.keti.spark.qconnector.quasar.types.Superblock
 import org.bson.Document
@@ -13,24 +13,26 @@ import org.bson.Document
 
 package object quasar {
 
-  val PWFACTOR = 6
-  val KFACTOR = 64
   val MICROSECOND = 1000
   val MILLISECOND = 1000 * MICROSECOND
   val SECOND = 1000 * MILLISECOND
   val MINUTE = 60 * SECOND
   val HOUR = 60 * MINUTE
   val DAY = 24 * HOUR
-  val ROOTPW = UnsignedInteger.valueOf(56) //This makes each bucket at the root ~= 2.2 years
+  val ROOTPW = 56 //This makes each bucket at the root ~= 2.2 years
 
   //so the root spans 146.23 years
   val ROOTSTART = -1152921504606846976L //This makes the 16th bucket start at 1970 (0)
   val MinimumTime = -(16 << 56)
   val MaximumTime = (48 << 56)
-  val LatestGeneration = UnsignedLong.MAX_VALUE //0xFFFFFFFF
+  val LatestGeneration = Long.MaxValue //0xFFFFFFFF
+
+  val Vector = 1
+  val Core = 2
+  val Bad = 255
 
   @throws(classOf[Exception])
-  def LoadSuperblock(id:UUID, generation:UnsignedLong) : Superblock = {
+  def LoadSuperblock(id:UUID, generation:Long) : Superblock = {
 
     var rv: Superblock = null
 
@@ -67,7 +69,7 @@ package object quasar {
 
 
   @throws(classOf[Exception])
-  def NewReadQTree(id:UUID, generation:UnsignedLong) : QTree = {
+  def NewReadQTree(id:UUID, generation:Long) : QTree = {
 
     val sb:Superblock = LoadSuperblock(id, generation)
 
@@ -85,5 +87,6 @@ package object quasar {
     }
     rv
   }
+
 
 }

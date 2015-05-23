@@ -1,18 +1,13 @@
 package kr.re.keti.spark.qconnector.rdd
 
-import java.io.IOException
-
 import kr.re.keti.spark.qconnector.rdd.partitioner.QuasarPartition
 import kr.re.keti.spark.qonnector.rdd.QuasarRDD
 
-import scala.collection.JavaConversions._
 import scala.language.existentials
 import scala.reflect.ClassTag
 
 //import org.apache.spark.metrics.InputMetricsUpdater
 import org.apache.spark.{Partition, SparkContext, TaskContext}
-
-import com.ceph.rados._
 
 /**
  * Created by almightykim on 5/2/15.

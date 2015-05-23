@@ -2,7 +2,6 @@ package kr.keti
 
 import java.util.UUID
 
-import com.google.common.primitives.{UnsignedLong, UnsignedInteger}
 import kr.re.keti.spark.qconnector.quasar.types.{Superblock, StatRecord}
 import kr.re.keti.spark.qconnector.quasar.{ LoadSuperblock, ROOTPW, ROOTSTART}
 import kr.re.keti.spark.qconnector.cephreader.{make_object_id, handle_read, R_CHUNKSIZE}
@@ -14,7 +13,9 @@ class QuasarProc {
 
 
   //def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:UnsignedLong, pointwidth:UnsignedInteger) : {val rv: Array[StatRecord]; val tr: UnsignedLong} = {
-  def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:UnsignedLong, pointwidth:UnsignedInteger) = {
+  def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int) = {
+
+    println("QueryStatisticalValues")
 
     try{
       //var rv = null
@@ -25,11 +26,15 @@ class QuasarProc {
 
       val tr = NewReadQTree(id, gen)
 
+
       val rv = tr.QueryStatisticalValuesBlock(st, ed, gen, pointwidth)
 
-      //return rv, tr.Generation(), nil
 
+      (tr,rv)
 /*
+      return (rv, tr.Generation(), nil)
+
+
       val sb:Superblock = LoadSuperblock(id, gen)
 
       //println("id : " + id.toString +  " bclear : " + bclear.toBinaryString + " st : " + st.toBinaryString + " ed : " + ed.toBinaryString )

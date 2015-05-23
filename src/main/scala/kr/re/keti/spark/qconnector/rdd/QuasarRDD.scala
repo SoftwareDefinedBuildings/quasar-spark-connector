@@ -1,11 +1,8 @@
 package kr.re.keti.spark.qonnector.rdd
 
 import kr.re.keti.spark.qconnector.rdd.EmptyQuasarRDD
-import org.apache.spark.Dependency
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{Dependency, SparkContext}
-
-import com.ceph.rados.Rados
 
 import scala.language.existentials
 import scala.reflect.ClassTag

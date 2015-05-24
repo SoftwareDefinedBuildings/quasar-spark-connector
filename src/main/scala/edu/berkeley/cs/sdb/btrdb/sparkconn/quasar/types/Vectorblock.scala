@@ -10,17 +10,21 @@ import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.{VSIZE, readSignedH
 
 class Vectorblock (
   //Metadata, not copied on clone
-  val Identifier: Long,
-  val Generation: Long,
+  Identifier: Long,
+  Generation: Long,
+  PointWidth: Int,
+  StartTime: Long
+) extends Block(Identifier, Generation, PointWidth, StartTime) {
 
   //Payload, copied on clone
-  //val Len: UnsignedInteger,
-  val PointWidth: Int,
-  val StartTime: Long
-){
+  var Len:Int = 0
   val Time: Array[Long] = new Array[Long](VSIZE)
   val Value: Array[Double] = new Array[Double](VSIZE)
-  var Len:Int = 0
+
+
+  override def GetDatablockType() : Long = {
+    Vector
+  }
 
   def Deserialize(src:Array[Byte]): Unit = {
     val blocktype = src(0).toInt & 0xFF
@@ -28,8 +32,8 @@ class Vectorblock (
       println("This is not a vector block")
     }
 
-    Len = (src(1).toInt & 0xFFFF) + ((src(2).toInt & 0xFFFF) << 8)
-    val length = Len
+    this.Len = (src(1) & 0xFF) + ((src(2) & 0xFF) << 8)
+    val length = this.Len
     var idx = 3
 
     val (m, l_0, _) = readUnsignedHuff(src.slice(idx,src.length))
@@ -38,8 +42,8 @@ class Vectorblock (
     idx += l_1
     val (t, l_2, _) = readUnsignedHuff(src.slice(idx,src.length))
     idx += l_2
-    Time(0) = t.longValue
-    Value(0) = recompose(e.longValue, m.longValue)
+    this.Time(0) = t
+    this.Value(0) = recompose(e, m)
 
     //Keep delta history
     val delta_depth = 3
@@ -49,9 +53,9 @@ class Vectorblock (
     var delta_idx = 0
     var num_deltas = 0
 
-    var mm1 = m.longValue()
-    var em1 = e.longValue()
-    var tm1 = t.longValue()
+    var mm1 = m
+    var em1 = e
+    var tm1 = t
 
     for (i <- 1 until length) {
       //How many deltas do we have
@@ -84,8 +88,8 @@ class Vectorblock (
       //Read the dd's
       var (ddm, l_3, _) = readSignedHuff(src.slice(idx,src.length))
       idx += l_3
-      var dde:Long = 0
-      var ddt:Long = 0
+      val dde:Long = 0
+      val ddt:Long = 0
 
       if ((ddm & 2) != 0)
       {
@@ -117,8 +121,8 @@ class Vectorblock (
       //Save values
       val e = em1 + de
       val m = mm1 + dm
-      Time(i) = tm1 + dt
-      Value(i) = recompose(e, m)
+      this.Time(i) = tm1 + dt
+      this.Value(i) = recompose(e, m)
       em1 += de
       mm1 += dm
       tm1 += dt

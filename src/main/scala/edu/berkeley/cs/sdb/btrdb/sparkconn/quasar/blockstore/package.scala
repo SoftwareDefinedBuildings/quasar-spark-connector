@@ -15,7 +15,6 @@ package object blockstore {
   val RELOCATION_BASE = 0xFF00000000000000L
 
 
-
   def readUnsignedHuff(src:Array[Byte]) : (Long, Int, Int) = {
     var rv:Long = 0
     var idx = 1

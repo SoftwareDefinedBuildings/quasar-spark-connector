@@ -4,8 +4,8 @@ import java.io.File
 import java.util.UUID
 
 import com.ceph.rados.{IoCTX, Rados}
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{Coreblock, Vectorblock}
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.{Bad, Core, Vector}
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{Block, Coreblock, Vectorblock}
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar._
 
 
 /** Contains [[edu.berkeley.cs.sdb.btrdb.sparkconn]] class that is the main entry point for
@@ -186,39 +186,46 @@ package object cephreader {
     buffer
   }
 
-  def ReadDatablock(uuid:UUID, addr:Long, impl_Generation:Long, impl_Pointwidth:Int, impl_StartTime:Long) =  {
+  @throws(classOf[Exception])
+  def ReadDatablock(node:QTreeNode, uuid:UUID, addr:Long, impl_Generation:Long, impl_Pointwidth:Int, impl_StartTime:Long) : Unit = {
 
     val trimbuf:Array[Byte] = Read(uuid, addr)
 
-    //println("trimbuf : " + trimbuf.mkString)
-
-    println("ReadDatablock() uuid " + uuid.toString + " | addr 0x" + addr.toHexString + " | impl_Generation " + impl_Generation + " | impl_Pointwidth " + impl_Generation + " | impl_StartTime 0x" + impl_StartTime.toHexString)
+    //println("ReadDatablock() uuid " + uuid.toString + " | addr 0x" + addr.toHexString + " | impl_Generation " + impl_Generation + " | impl_Pointwidth " + impl_Generation + " | impl_StartTime 0x" + impl_StartTime.toHexString)
 
     DatablockGetBufferType(trimbuf) match {
       case Core => {
-        val rv:Coreblock = new Coreblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
-        rv.Deserialize(trimbuf)
+        val db = new Coreblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
+        db.Deserialize(trimbuf)
+        node.core_block = db
+        node.isLeaf = false
 
-        println("Addr  : [" + rv.Addr.map("%d " format _).mkString + "]")
-        println("Count : [" + rv.Count.map("%d " format _).mkString + "]")
-        println("Min   : [" + rv.Min.map("%.0f " format _).mkString + "]")
-        println("Mean  : [" + rv.Mean.map("%.0f " format _).mkString + "]")
-        println("Max   : [" + rv.Max.map("%.0f " format _).mkString + "]")
-        println("CG    : [" + rv.CGeneration.map("%d " format _).mkString + "]")
+        {
+          println("------------------------ CORE BLOCK ------------------------")
+          println("Addr  : [" + db.Addr.map("%d " format _).mkString + "]")
+          println("Count : [" + db.Count.map("%d " format _).mkString + "]")
+          println("Min   : [" + db.Min.map("%.0f " format _).mkString + "]")
+          println("Mean  : [" + db.Mean.map("%.0f " format _).mkString + "]")
+          println("Max   : [" + db.Max.map("%.0f " format _).mkString + "]")
+          println("CG    : [" + db.CGeneration.map("%d " format _).mkString + "]")
+        }
 
-        rv
       }
       case Vector => {
-        val rv = new Vectorblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
-        rv.Deserialize(trimbuf)
+        val db = new Vectorblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
+        db.Deserialize(trimbuf)
+        node.vector_block = db
+        node.isLeaf = true
 
-        println("Read final : " + rv.Time.map("%d" format _).mkString)
-
-
-        rv
+        {
+          println("------------------------ VECTOR BLOCK ------------------------")
+          println("Time  : [" + db.Time.map("%d " format _).mkString + "]")
+          println("Value : [" + db.Value.map("%.0f " format _).mkString + "]")
+        }
       }
       case default => {
         throw new Exception("Strange datablock type")
+
       }
     }
   }

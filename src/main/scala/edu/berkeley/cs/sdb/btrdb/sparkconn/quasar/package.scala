@@ -67,13 +67,10 @@ package object quasar {
     rv
   }
 
-
   @throws(classOf[Exception])
   def NewReadQTree(id:UUID, generation:Long) : QTree = {
 
     val sb:Superblock = LoadSuperblock(id, generation)
-
-    println("NewReadQTree -> LoadSuperblock : " + sb.toString)
 
     if (sb == null){
       throw new Exception("No Such Stream!")
@@ -82,7 +79,7 @@ package object quasar {
     var rv = new QTree(sb)
     if (sb.root != 0) {
       val rt = rv.LoadNode(sb.root, sb.gen, ROOTPW, ROOTSTART)
-      rv = rv.withNewRoot(rt)
+      rv.root = rt
     }
     rv
   }

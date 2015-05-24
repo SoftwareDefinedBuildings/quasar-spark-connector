@@ -3,6 +3,7 @@ import java.util.UUID
 import com.google.common.primitives.{UnsignedLong, UnsignedInteger}
 import kr.re.keti.spark.qconnector.quasar.LatestGeneration
 import kr.keti._
+import kr.re.keti.spark.qconnector.quasar.blockstore._
 
 import scala.annotation.tailrec
 
@@ -23,11 +24,24 @@ object Hello {
     mtest.testConnectivity()
 */
 
-    //http://el-peso:9000/data/uuid/2e43475f-5359-5354-454d-5f5245414354?starttime=1364823796&endtime=1398437046&unitoftime=ns&pw=16
-    //http://el-peso:9000/data/uuid/2e43475f-5359-5354-454d-5f5245414354?starttime=1364823796&endtime=1398437046&unitoftime=ns
-    val qtest: QuasarProc = new QuasarProc()
-    val (rv, tr) = qtest.QueryStatisticalValues(UUID.fromString("2e43475f-5359-5354-454d-5f5245414354"), 1364823796L, 1398437046L, LatestGeneration , 16)
+    if (true){
 
+      //http://el-peso:9000/data/uuid/2e43475f-5359-5354-454d-5f5245414354?starttime=1364823796&endtime=1398437046&unitoftime=ns&pw=16
+
+      //http://el-peso:9000/data/uuid/2e43475f-5359-5354-454d-5f5245414354?starttime=1396310400&endtime=1396396800&unitoftime=ns&pw=16
+      val qtest: QuasarProc = new QuasarProc()
+      val (rv, tr) = qtest.QueryStatisticalValues(UUID.fromString("2e43475f-5359-5354-454d-5f5245414354"), 1396310400L, 1396396800L, LatestGeneration , 16)
+
+    }else{
+
+      val src:Array[Byte] = hex2bytes("f060102f2dd4d018d59a04a0029022fb99b9501d14b40e9014c14026901cfe")
+      val (addr_dd, used_0, bottom) = readSignedHuff(src)
+      println("addr_dd <" + addr_dd + "> used( " + used_0 + " ) bottom ( " + bottom + " )")
+
+      val (v1, v2, v3) = readUnsignedHuff(src)
+      println("v1 <" + v1 + "> v2( " + v2 + " ) v3 ( " + v3 + " )")
+
+    }
 
 /*
     val src:Array[Byte] = hex2bytes("02fd00fd00fd00fd00fd00fd00fd00fd00fd00fd00fd00fd00fd00fd00fd00fd00f060102f2dd4d018d59a04a0029022fb99b9501d14b40e9014c14026901cfe")

@@ -22,5 +22,5 @@ class Superblock(
 
   def uid: String = uuid.toString
 
-  override def toString: String = " UUID [" + this.uid + "] GEN (" + gen.toString + ") ROOT <" + root.toString + "> UNLINKED {" + unlinked.toString + "} "
+  override def toString: String = " UUID [" + this.uid + "] GEN (" + gen.toString + ") ROOT < 0x" + root.toHexString + "> UNLINKED {" + unlinked.toString + "} "
 }

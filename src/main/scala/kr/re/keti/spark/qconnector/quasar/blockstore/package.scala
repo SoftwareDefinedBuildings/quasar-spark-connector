@@ -22,6 +22,9 @@ package object blockstore {
     var rv:Long = 0
     var idx = 1
 
+
+    //println("src " + src.length + " : " + src.map("%02x" format _).mkString)
+
     def do_rest(iv:Long, itr:Int, n:Int) : (Long, Int) = {
       var r = iv
       var i = itr
@@ -38,15 +41,18 @@ package object blockstore {
 
     if (iv > 0xFE){
       println("This huffman symbol is reserved: +v", iv)
+
     } else if( iv == 0xFD ) {
       return (0, 1, ABSZERO)
+
     } else if( iv == 0xFE ) {
       return (0, 1, FULLZERO)
+
     } else if( iv == 0xFC) {
       val (r, i) = do_rest(0, idx, 8)
       rv = r
       idx = i
-    } else if( iv == 0xF8 ) {
+    } else if( iv >= 0xF8 ) {
       rv = iv & 0x03
       val (r, i) = do_rest(rv, idx, 7)
       rv = r
@@ -98,13 +104,13 @@ package object blockstore {
     }
 
     val s = v & 1
-    val hv = v / 2
+    val hv = v >>> 1
 
     if (s == 1) {
       return (-hv, l, VALUE)
     }
 
-    (v, l, VALUE)
+    (hv, l, VALUE)
   }
 
 

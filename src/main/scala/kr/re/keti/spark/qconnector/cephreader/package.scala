@@ -192,23 +192,21 @@ package object cephreader {
 
     val trimbuf:Array[Byte] = Read(uuid, addr)
 
-    println("trimbuf : " + trimbuf.mkString)
+    //println("trimbuf : " + trimbuf.mkString)
+
+    println("ReadDatablock() uuid " + uuid.toString + " | addr 0x" + addr.toHexString + " | impl_Generation " + impl_Generation + " | impl_Pointwidth " + impl_Generation + " | impl_StartTime 0x" + impl_StartTime.toHexString)
 
     DatablockGetBufferType(trimbuf) match {
       case Core => {
         val rv:Coreblock = new Coreblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
         rv.Deserialize(trimbuf)
 
-
-
-        println("Addr : " + rv.Addr.map("%s | " format _.toString).mkString)
-        println("Count : " + rv.Count.map("%s | " format _.toString).mkString)
-        println("Min : " + rv.Min.map("%s | " format _.toString).mkString)
-        println("Mean : " + rv.Mean.map("%s | " format _.toString).mkString)
-        println("Max : " + rv.Max.map("%s | " format _.toString).mkString)
-        println("CG : " + rv.CGeneration.map("%s | " format _.toString).mkString)
-
-
+        println("Addr  : [" + rv.Addr.map("%d " format _).mkString + "]")
+        println("Count : [" + rv.Count.map("%d " format _).mkString + "]")
+        println("Min   : [" + rv.Min.map("%.0f " format _).mkString + "]")
+        println("Mean  : [" + rv.Mean.map("%.0f " format _).mkString + "]")
+        println("Max   : [" + rv.Max.map("%.0f " format _).mkString + "]")
+        println("CG    : [" + rv.CGeneration.map("%d " format _).mkString + "]")
 
         rv
       }

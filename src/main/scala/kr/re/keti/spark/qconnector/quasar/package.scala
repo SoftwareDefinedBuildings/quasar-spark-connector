@@ -73,8 +73,7 @@ package object quasar {
 
     val sb:Superblock = LoadSuperblock(id, generation)
 
-    println(sb.toString)
-
+    println("NewReadQTree -> LoadSuperblock : " + sb.toString)
 
     if (sb == null){
       throw new Exception("No Such Stream!")

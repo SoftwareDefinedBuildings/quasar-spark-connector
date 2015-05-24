@@ -1,3 +1,7 @@
+/*
+	The purpose of this file is to illustrate how BTrDB re-constructs its tree from stroage.
+*/
+
 const PWFACTOR = bstore.PWFACTOR
 const KFACTOR = bstore.KFACTOR
 const MICROSECOND = 1000

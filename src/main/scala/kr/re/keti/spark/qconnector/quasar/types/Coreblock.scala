@@ -27,6 +27,8 @@ class Coreblock(
 
   def Deserialize(src:Array[Byte]): Unit = {
 
+    println("src begin : " + src.map("%02x" format _).mkString)
+
     if (src(0).toInt != Core) {
       println("This is not a core block")
     }
@@ -42,7 +44,6 @@ class Coreblock(
       return (dd:Long) => {
         var total_dt:Long = 0
 
-        //TODO: check if this itr is safe
         for (i <- 0 until depth){
           total_dt += hist_delta(i)
         }
@@ -79,24 +80,15 @@ class Coreblock(
     val dd_max_m = dedeltadeltarizer(delta_depth)
     val dd_max_e = dedeltadeltarizer(delta_depth)
 
-//    println("dd_addr " + String.valueOf(dd_addr(-200)))
-
-/*
-    val (uaddr_dd, uused, ubottom) = readUnsignedHuff(src.slice(idx,src.length))
-    println("addr_dd " + String.valueOf(uaddr_dd) + " used " + String.valueOf(uused) + " bottom " + String.valueOf(ubottom) )
-
-    val (addr_dd, used, bottom) = readSignedHuff(src.slice(idx,src.length))
-    println("addr_dd " + String.valueOf(addr_dd) + " used " + String.valueOf(used) + " bottom " + String.valueOf(bottom) )
-*/
-
     var itr = 0
-    val loop = new Breaks
+    val lp = new Breaks
 
-    loop.breakable{
+    lp.breakable{
       for (i <- 0 until KFACTOR) {
 
         val (addr_dd, used_0, bottom) = readSignedHuff(src.slice(idx,src.length))
         idx += used_0
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 0 - idx " + idx)}
 
         if (bottom == ABSZERO) {
 
@@ -107,23 +99,26 @@ class Coreblock(
 
           val (cgen_dd, used_1, _) = readSignedHuff(src.slice(idx,src.length))
           idx += used_1
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 1 - idx " + idx)}
           CGeneration(i) = dd_cgen(cgen_dd)
 
         } else if (bottom == FULLZERO) {
-          loop.break
+          lp.break
         } else {
           //Real value
           Addr(i) = dd_addr(addr_dd)
 
           var (cnt_dd, used_2, _) = readSignedHuff(src.slice(idx,src.length))
-          idx = idx + used_2
+          idx += used_2
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 2 - idx " + idx)}
 
           var cgen_dd:Long = 0
           if ((cnt_dd & 1) != 0)
           {
-            var (cgen_dd_t, used_3, _) = readSignedHuff(src.slice(idx,src.length))
+            val (cgen_dd_t, used_3, _) = readSignedHuff(src.slice(idx,src.length))
             cgen_dd = cgen_dd_t
             idx += used_3
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 3 - idx " + idx)}
           }
           cnt_dd >>>= 1
           CGeneration(i) = dd_cgen(cgen_dd)
@@ -131,12 +126,15 @@ class Coreblock(
 
           var (min_m_dd, used_4, _) = readSignedHuff(src.slice(idx,src.length))
           idx += used_4
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 4 - idx " + idx)}
+
           var min_e_dd:Long = 0
           if ((min_m_dd & 1) != 0)
           {
             val (min_e_dd_t, used_5, _) = readSignedHuff(src.slice(idx,src.length))
             min_e_dd = min_e_dd_t
             idx += used_5
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 5 - idx " + idx)}
           } else {
             min_e_dd = 0
           }
@@ -145,12 +143,20 @@ class Coreblock(
 
           var (mean_m_dd, used_5, _) = readSignedHuff(src.slice(idx,src.length))
           idx += used_5
+
+if (Identifier == 0x300817970cL) {
+  println("src : " + src.slice((idx - used_5),src.length).map("%02x" format _).mkString)
+  println("mean_m_dd 0x" + mean_m_dd.toHexString)
+  println("i[" + i + "] 6 - idx " + idx)
+}
+
           var mean_e_dd:Long = 0
           if ((mean_m_dd & 1) != 0)
           {
             val (mean_e_dd_t, used_6, _) = readSignedHuff(src.slice(idx,src.length))
             mean_e_dd = mean_e_dd_t
             idx += used_6
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 7 - idx " + idx)}
           } else {
             mean_e_dd = 0
           }
@@ -159,12 +165,14 @@ class Coreblock(
 
           var (max_m_dd, used_7, _) = readSignedHuff(src.slice(idx,src.length))
           idx += used_7
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 8 - idx " + idx)}
           var max_e_dd:Long = 0
           if ((max_m_dd & 1) != 0)
           {
             val (max_e_dd_t, used_8, _) = readSignedHuff(src.slice(idx,src.length))
             max_e_dd = max_e_dd_t
             idx += used_8
+if (Identifier == 0x300817970cL) {println("i[" + i + "] 9 - idx " + idx)}
           } else {
             max_e_dd = 0
           }
@@ -176,7 +184,9 @@ class Coreblock(
       }
     }
 
-    for (i <- itr until KFACTOR){
+    println("i : " + itr.toString + " KFACTOR : " + KFACTOR.toString)
+
+    for (i <- itr + 1 until KFACTOR){
       Addr(i) = 0
       Count(i) = 0
       CGeneration(i) = 0

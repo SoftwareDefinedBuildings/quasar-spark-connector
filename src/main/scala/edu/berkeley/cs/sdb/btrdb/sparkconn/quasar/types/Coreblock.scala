@@ -167,12 +167,11 @@ class Coreblock(
       }
     }
 
-    for (i <- itr + 1 until KFACTOR){
+    for (i <- (itr + 1) until KFACTOR){
       Addr(i) = 0
       Count(i) = 0
       CGeneration(i) = 0
     }
-
 
   }
 

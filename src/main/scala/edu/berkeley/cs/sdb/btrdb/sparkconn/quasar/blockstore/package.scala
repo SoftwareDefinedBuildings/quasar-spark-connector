@@ -114,7 +114,7 @@ package object blockstore {
 
   def recompose(e:Long, m:Long) : Double = {
     val s = e & 1
-    val el = e / 2
+    val he = (e & 0xFFFF) >>> 1
 
     var iv:Long = (
       (m & 0x00000000000000FFL) << (6*8) |
@@ -124,10 +124,10 @@ package object blockstore {
       (m & 0x000000FF00000000L) >>> (2*8) |
       (m & 0x0000FF0000000000L) >>> (4*8) |
       (m & 0x00FF000000000000L) >>> (6*8) )
-    iv = (iv | (e << 52))
+    iv = (iv | (he << 52))
     iv = (iv | (s << 63))
 
-    iv.toDouble
+    return java.lang.Double.longBitsToDouble(iv)
   }
 
 }

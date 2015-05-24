@@ -163,8 +163,6 @@ package object cephreader {
       }
     }
 
-    println("ln  : " + String.valueOf(ln) + " copied : " + String.valueOf(copied))
-
     if (copied < ln) {
 
       //We need some bytes from chunk2

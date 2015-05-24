@@ -10,7 +10,7 @@ unmanagedBase := baseDirectory.value / "lib"
 
 unmanagedJars in Compile += file("lib/rados-1.0-SNAPSHOT.jar")
 
-mainClass := Some("Hello")
+mainClass := Some("Main")
 
 libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-core" % "1.2.0",

@@ -23,8 +23,7 @@ class QuasarTest {
 
       val tr = NewReadQTree(id, gen)
 
-      val rv = tr.QueryStatisticalValuesBlock(st, ed, gen, pointwidth)
-
+      val rv = tr.QueryStatisticalValuesBlock(st, ed, pointwidth)
 
       (tr,rv)
 /*

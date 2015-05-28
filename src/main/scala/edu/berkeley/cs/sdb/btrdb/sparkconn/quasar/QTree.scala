@@ -32,14 +32,18 @@ class QTree (
     n
   }
 
-  @throws(classOf[Exception])
-  def QueryStatisticalValuesBlock(start:Long, end:Long, gen:Long, pointwidth:Int) : Array[StatRecord] = {
-
-    val rv = new Array[StatRecord](256)
-
-
-    rv
+  def QueryStatisticalValues(start:Long, end:Long, pw:Integer) = {
+    //Remember end is inclusive for QSV
+    if (this.root != null) {
+      this.root.QueryStatisticalValues(null, start, end, pw)
+    }
   }
 
+  @throws(classOf[Exception])
+  def QueryStatisticalValuesBlock(start:Long, end:Long, pw:Int) : Array[StatRecord] = {
+    val rv = new Array[StatRecord](256)
+    this.QueryStatisticalValues(start, end, pw)
+    rv
+  }
 
 }

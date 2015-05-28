@@ -29,11 +29,6 @@ class QTreeNode(
     }
   }
 
-  def getDatablock() : Unit = {
-
-  }
-
-
   def StartTime() : Long = {
     if (this.isLeaf) {
       return this.vector_block.StartTime
@@ -199,7 +194,23 @@ class QTreeNode(
     return child
   }
 
+  //Although we keep caches of datablocks in the bstore, we can't actually free them until
+  //they are unreferenced. This dropcache actually just makes sure they are unreferenced
+  def Free() : Unit = {
+    if (this.isLeaf) {
+      this.vector_block = null
+    } else {
 
+      for (i <- 0 until this.child_cache.length) {
+        val c:QTreeNode = this.child_cache(i)
+        if (c != null) {
+          c.Free()
+          this.child_cache(i) = null
+        }
+      }
+      this.core_block = null
+    }
+  }
 
   /*
 
@@ -288,7 +299,6 @@ class QTreeNode(
   def QueryStatisticalValues(rv:StatRecord, start:Long, end:Long, pw:Int) : Unit = {
 
     if (this.isLeaf) {
-
       var idx:Long = 0
       breakable(while (idx < this.vector_block.Len) {
 
@@ -314,18 +324,16 @@ class QTreeNode(
 
     } else {
 
-
       //Ok we are at the correct level and we are a core
       val sb = this.ClampBucket(start) //TODO check this function handles out of range
       val eb = this.ClampBucket(end)
 
       if (pw <= this.PointWidth()) {
-
         for (b <- sb until eb) {
           val c = this.Child(b)
           if (c != null) {
             c.QueryStatisticalValues(rv, start, end, pw)
-            //c.Free()
+            c.Free()
             this.child_cache(b) = null
           }
         }
@@ -342,8 +350,6 @@ class QTreeNode(
         }
       }
     }
-
-
   }
 
 }

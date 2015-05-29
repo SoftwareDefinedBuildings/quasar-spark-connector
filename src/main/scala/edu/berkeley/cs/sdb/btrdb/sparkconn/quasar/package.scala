@@ -70,9 +70,9 @@ package object quasar {
   @throws(classOf[Exception])
   def NewReadQTree(id:UUID, generation:Long) : QTree = {
 
-    println("quasar::NewReadQTree")
-
     val sb:Superblock = LoadSuperblock(id, generation)
+
+    println("NewReadQTree() uuid " + sb.Uuid().toString + " | gen " + sb.Gen().toString + " | root " + sb.Root().toString + " | generation " + generation.toString + "| ROOTPW " + ROOTPW.toString + " | ROOTSTART " + ROOTSTART.toString )
 
     if (sb == null){
       throw new Exception("No Such Stream!")
@@ -89,11 +89,11 @@ package object quasar {
   @throws(classOf[Exception])
   def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int): (Array[StatRecord], Long) = {
 
-    println("quasar::QueryStatisticalValues")
-
     val bclear = ~((1<<pointwidth.intValue) - 1)
     val st = start & bclear
     val ed = (end & bclear) - 1
+
+    println("quasar::QueryStatisticalValues start <" + st.toString + "> end (" + ed.toString + ")")
 
     val tr:QTree = NewReadQTree(id, gen)
 

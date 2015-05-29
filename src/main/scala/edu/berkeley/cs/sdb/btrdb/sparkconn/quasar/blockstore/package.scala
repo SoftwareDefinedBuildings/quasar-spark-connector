@@ -1,5 +1,11 @@
 package edu.berkeley.cs.sdb.btrdb.sparkconn.quasar
 
+import java.util.UUID
+
+import edu.berkeley.cs.sdb.btrdb.sparkconn.cephprovider.Read
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.qtree.QTreeNode
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{Coreblock, Vectorblock}
+
 package object blockstore {
 
 
@@ -128,6 +134,65 @@ package object blockstore {
     iv = (iv | (s << 63))
 
     return java.lang.Double.longBitsToDouble(iv)
+  }
+
+  def DatablockGetBufferType(buf:Array[Byte]) : Long = {
+    buf(0) match {
+      case Vector => {
+        return Vector
+      }
+      case Core => {
+        return Core
+      }
+      case default => {
+        return Bad
+      }
+    }
+  }
+
+  @throws(classOf[Exception])
+  def ReadDatablock(node:QTreeNode, uuid:UUID, addr:Long, impl_Generation:Long, impl_Pointwidth:Int, impl_StartTime:Long) : Unit = {
+
+    val trimbuf:Array[Byte] = Read(uuid, addr)
+
+    //println("ReadDatablock() uuid " + uuid.toString + " | addr 0x" + addr.toHexString + " | impl_Generation " + impl_Generation + " | impl_Pointwidth " + impl_Generation + " | impl_StartTime 0x" + impl_StartTime.toHexString)
+    println("ReadDatablock() type trimbuf <<" + trimbuf(0).toString + ">>")
+
+    DatablockGetBufferType(trimbuf) match {
+      case Core => {
+        val db = new Coreblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
+        db.Deserialize(trimbuf)
+        node.core_block = db
+        node.isLeaf = false
+
+        {
+          println("------------------------ CORE BLOCK ------------------------")
+          println("Addr  : [" + db.Addr.map("%d " format _).mkString + "]")
+          println("Count : [" + db.Count.map("%d " format _).mkString + "]")
+          println("Min   : [" + db.Min.map("%.1f " format _).mkString + "]")
+          println("Mean  : [" + db.Mean.map("%.1f " format _).mkString + "]")
+          println("Max   : [" + db.Max.map("%.1f " format _).mkString + "]")
+          println("CG    : [" + db.CGeneration.map("%d " format _).mkString + "]")
+        }
+
+      }
+      case Vector => {
+        val db = new Vectorblock(addr, impl_Generation, impl_Pointwidth, impl_StartTime)
+        db.Deserialize(trimbuf)
+        node.vector_block = db
+        node.isLeaf = true
+
+        {
+          println("------------------------ VECTOR BLOCK ------------------------")
+          println("Time  : [" + db.Time.map("%d " format _).mkString + "]")
+          println("Value : [" + db.Value.map("%.0f " format _).mkString + "]")
+        }
+      }
+      case default => {
+        throw new Exception("Strange datablock type")
+
+      }
+    }
   }
 
 }

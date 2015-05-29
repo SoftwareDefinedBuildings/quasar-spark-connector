@@ -60,25 +60,23 @@ class QTreeNode(
 
   def ClampVBucket(t:Long, pw:Int) : Long = {
 
-    var rt:Long = 0
+    var rt:Long = t
 
     if (!this.isLeaf) {
       println("This is intended for vectors")
       return 0
     }
 
-    if (t < this.StartTime()) {
+    if (rt < this.StartTime()) {
       rt = this.StartTime()
     }
-
-    rt = t - this.StartTime()
-
+    rt -= - this.StartTime()
     if (pw > this.parent.PointWidth() ) {
       println("I can't do this dave")
       return 0
     }
 
-    var idx = t >>> pw
+    var idx = rt >>> pw
     val maxidx = this.parent.WidthTime() >>> pw
     if (idx >= maxidx) {
       idx = maxidx - 1
@@ -89,7 +87,7 @@ class QTreeNode(
 
   def ClampBucket(t:Long) : Int = {
 
-    var rt = t
+    var rt:Long = t
 
     if (this.isLeaf) {
       println("Not meant to use this on leaves")
@@ -101,7 +99,7 @@ class QTreeNode(
     }
     rt -= this.StartTime()
 
-    var rv = (rt >>> this.PointWidth())
+    var rv = (rt >> this.PointWidth())
     if (rv >= KFACTOR) {
       rv = (KFACTOR - 1)
     }
@@ -313,13 +311,12 @@ class QTreeNode(
 
         if (this.vector_block.Time(idx.toInt) >= end) {
           println("QTreeNode::QueryStatisticalValues (this.vector_block.Time(idx.toInt) >= end)")
-
           break
         }
 
-        if (this.vector_block.Time(idx.toInt) > start) {
+        if (start <= this.vector_block.Time(idx.toInt) ) {
 
-          println("QTreeNode::QueryStatisticalValues (this.vector_block.Time(idx.toInt) > start)")
+          println("QTreeNode::QueryStatisticalValues (this.vector_block.Time(idx.toInt) => start)")
 
           val b = this.ClampVBucket(this.vector_block.Time(idx.toInt), pw)
           val (count, min, mean, max) = this.OpReduce(pw, b)
@@ -342,12 +339,9 @@ class QTreeNode(
 
     } else {
 
-      println("QTreeNode::QueryStatisticalValues::CoreNode")
-
       //Ok we are at the correct level and we are a core
       val sb = this.ClampBucket(start) //TODO check this function handles out of range
       val eb = this.ClampBucket(end)
-
 
       println("QTreeNode::QueryStatisticalValues::CoreNode start (" + start.toString + ") sb <" + sb.toString + "> end (" + end.toString + ") eb <" + eb.toString + ">")
       println("QTreeNode::QueryStatisticalValues::CoreNode StartTime (" + this.StartTime().toString + ") Pw <" + this.PointWidth().toString + ">")
@@ -363,14 +357,10 @@ class QTreeNode(
           if (c != null) {
 
             println("QTreeNode::QueryStatisticalValues::CoreNode (pw <= this.PointWidth()) (c != null)")
+
             c.QueryStatisticalValues(rv, start, end, pw)
             c.Free()
             this.child_cache(b) = null
-
-          } else{
-
-            println("QTreeNode::QueryStatisticalValues::CoreNode (pw <= this.PointWidth()) (c == null)")
-
           }
 
         }

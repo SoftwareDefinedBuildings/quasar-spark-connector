@@ -114,7 +114,7 @@ class Coreblock(
             cgen_dd = cgen_dd_t
             idx += used_3
           }
-          cnt_dd >>>= 1
+          cnt_dd >>= 1
           this.CGeneration(i) = dd_cgen(cgen_dd)
           this.Count(i) = dd_count(cnt_dd)
 
@@ -130,7 +130,7 @@ class Coreblock(
           } else {
             min_e_dd = 0
           }
-          min_m_dd >>>= 1
+          min_m_dd >>= 1
           this.Min(i) = recompose(dd_min_e(min_e_dd), dd_min_m(min_m_dd))
 
           var (mean_m_dd, used_5, _) = readSignedHuff(src.slice(idx,src.length))
@@ -145,7 +145,7 @@ class Coreblock(
           } else {
             mean_e_dd = 0
           }
-          mean_m_dd >>>= 1
+          mean_m_dd >>= 1
           this.Mean(i) = recompose(dd_mean_e(mean_e_dd), dd_mean_m(mean_m_dd))
 
           var (max_m_dd, used_7, _) = readSignedHuff(src.slice(idx,src.length))
@@ -159,7 +159,7 @@ class Coreblock(
           } else {
             max_e_dd = 0
           }
-          max_m_dd >>>= 1
+          max_m_dd >>= 1
           this.Max(i) = recompose(dd_max_e(max_e_dd), dd_max_m(max_m_dd))
         }
 

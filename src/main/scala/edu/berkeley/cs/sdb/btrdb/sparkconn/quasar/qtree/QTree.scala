@@ -1,7 +1,8 @@
 package edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.qtree
 
-import edu.berkeley.cs.sdb.btrdb.sparkconn.cephreader.ReadDatablock
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.ReadDatablock
 import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types._
+
 import scala.collection.mutable.ListBuffer
 
 /**
@@ -24,7 +25,7 @@ class QTree (
   @throws(classOf[Exception])
   def LoadNode(addr:Long , impl_Generation:Long , impl_Pointwidth:Int, impl_StartTime:Long) : QTreeNode = {
 
-    println("QTree::LoadNode() addr " + addr.toHexString + " | impl_Generation " + impl_Generation.toString() +  " | impl_Pointwidth " + impl_Pointwidth.toString +  " | impl_StartTime " + impl_Pointwidth.toString)
+    println("\n\nQTree::LoadNode() addr " + addr.toHexString + " | impl_Generation " + impl_Generation.toString() +  " | impl_Pointwidth " + impl_Pointwidth.toString +  " | impl_StartTime " + impl_Pointwidth.toString)
 
     val n = new QTreeNode(this)
     ReadDatablock(n, sb.uuid, addr, impl_Generation, impl_Pointwidth, impl_StartTime)
@@ -38,7 +39,7 @@ class QTree (
 
   def QueryStatisticalValues(rv:ListBuffer[StatRecord], start:Long, end:Long, pw:Integer) = {
 
-    println("QTree::QueryStatisticalValues start <" + start.toString + "> end (" + end.toString + ") pw [" + pw.toString + "]")
+    //println("QTree::QueryStatisticalValues start <" + start.toString + "> end (" + end.toString + ") pw [" + pw.toString + "]")
 
     //Remember end is inclusive for QSV
     if (this.root != null) {

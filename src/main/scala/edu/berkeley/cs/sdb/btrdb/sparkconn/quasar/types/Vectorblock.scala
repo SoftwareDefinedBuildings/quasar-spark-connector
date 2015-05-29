@@ -101,7 +101,7 @@ class Vectorblock (
         val (ddt, l_5, _) = readSignedHuff(src.slice(idx,src.length))
         idx += l_5
       }
-      ddm >>>= 2
+      ddm >>= 2
       //Convert dd's to d's
       val dm = ddm + adm
       val dt = ddt + adt

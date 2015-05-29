@@ -1,7 +1,6 @@
 package edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types
 
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.Vector
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.{VSIZE, readSignedHuff, readUnsignedHuff, recompose}
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.{VSIZE, Vector, readSignedHuff, readUnsignedHuff, recompose}
 
 // The leaf datablock type. The tags allow unit tests
 // to work out if clone / serdes are working properly

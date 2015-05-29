@@ -4,53 +4,59 @@ import java.io.File
 import java.util.UUID
 
 import com.ceph.rados.{IoCTX, Rados}
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{Block, Coreblock, Vectorblock}
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar._
-
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.{Bad, Core, Vector}
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.qtree.QTreeNode
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{Coreblock, Vectorblock}
 
 /** Contains [[edu.berkeley.cs.sdb.btrdb.sparkconn]] class that is the main entry point for
   * analyzing Quasar data from Spark. */
 package object cephreader {
 
   //I"m going for one per core on a decent server
-  val NUM_RHANDLES = 40
+  val NUM_RHANDLES      = 40
 
   //We know we won"t get any addresses here, because this is the relocation base as well
-  val METADATA_BASE = 0xFF00000000000000L
+  val METADATA_BASE     = 0xFF00000000000000L
 
   //4096 blocks per addr lock
-  val ADDR_LOCK_SIZE = 0x1000000000L
-  val ADDR_OBJ_SIZE = 0x0001000000L
+  val ADDR_LOCK_SIZE    = 0x1000000000L
+  val ADDR_OBJ_SIZE     = 0x0001000000L
 
   //Just over the DBSIZE
   val MAX_EXPECTED_OBJECT_SIZE = 20485
 
   //The number of RADOS blocks to cache (up to 16MB each, probably only 1.6MB each)
-  val RADOS_CACHE_SIZE = NUM_RHANDLES * 2
+  val RADOS_CACHE_SIZE  = NUM_RHANDLES * 2
 
-  val OFFSET_MASK = 0xFFFFFF
-  val R_CHUNKSIZE = 1 << 20
+  val OFFSET_MASK       = 0xFFFFFF
+  val R_CHUNKSIZE       = 1 << 20
 
   //This is how many uuid/address pairs we will keep to facilitate appending to segments
   //instead of creating new ones.
-  val WORTH_CACHING = OFFSET_MASK - MAX_EXPECTED_OBJECT_SIZE
-  val SEGCACHE_SIZE = 1024
+  val WORTH_CACHING     = OFFSET_MASK - MAX_EXPECTED_OBJECT_SIZE
+  val SEGCACHE_SIZE     = 1024
 
   // 1MB for write cache, I doubt we will ever hit this tbh
-  val WCACHE_SIZE = 1<<20
-  val COMP_CAP_STEP = 64
-  val OID_SIZE = 43 //32 for uuid, 10 for id, 1 for nul
+  val WCACHE_SIZE       = 1<<20
+  val COMP_CAP_STEP     = 64
+  val OID_SIZE          = 43 //32 for uuid, 10 for id, 1 for nul
 
-  val R_ADDRMASK = 0xFFFFFFFFFFF00000L //^((uint64(1) << 20) - 1)
-  val R_OFFSETMASK = 0xFFFFF           //  (uint64(1) << 20) - 1
+  val R_ADDRMASK        = 0xFFFFFFFFFFF00000L //^((uint64(1) << 20) - 1)
+  val R_OFFSETMASK      = 0xFFFFF           //  (uint64(1) << 20) - 1
 
   val nibbles:Array[Char] = Array[Char]('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f')
 
-  def DatablockGetBufferType(buf:Array[Byte]) = {
+  def DatablockGetBufferType(buf:Array[Byte]) : Long = {
     buf(0) match {
-      case Vector => Vector
-      case Core => Core
-      case default => Bad
+      case Vector => {
+        return Vector
+      }
+      case Core => {
+        return Core
+      }
+      case default => {
+        return Bad
+      }
     }
   }
 
@@ -102,7 +108,7 @@ package object cephreader {
     val buf:Array[Byte] = new Array[Byte](len.intValue)
     val rv:Int = io.read(oid, len.intValue, offset.longValue, buf)
 
-    println("rc value : " + rv + " length requested : " + len)
+    //println("rc value : " + rv + " length requested : " + len)
 
     if (rv < 0)
     {
@@ -181,7 +187,7 @@ package object cephreader {
       println("This is unexpected")
     }
 
-    println("Read final : " + buffer.map("%02x" format _).mkString)
+    //println("Read final : " + buffer.map("%02x" format _).mkString)
 
     buffer
   }
@@ -192,6 +198,7 @@ package object cephreader {
     val trimbuf:Array[Byte] = Read(uuid, addr)
 
     //println("ReadDatablock() uuid " + uuid.toString + " | addr 0x" + addr.toHexString + " | impl_Generation " + impl_Generation + " | impl_Pointwidth " + impl_Generation + " | impl_StartTime 0x" + impl_StartTime.toHexString)
+    println("ReadDatablock() type trimbuf <<" + trimbuf(0).toString + ">>")
 
     DatablockGetBufferType(trimbuf) match {
       case Core => {

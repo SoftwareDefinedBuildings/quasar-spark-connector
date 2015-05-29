@@ -2,9 +2,6 @@ package edu.berkeley.cs.sdb.btrdb.sparkconn.quasar
 
 package object blockstore {
 
-  val VALUE           = 0
-  val ABSZERO         = 1
-  val FULLZERO        = 2
 
   val VSIZE           = 1024
   val KFACTOR         = 64
@@ -14,13 +11,17 @@ package object blockstore {
   val PWFACTOR        = 6
   val RELOCATION_BASE = 0xFF00000000000000L
 
+  val VALUE           = 0
+  val ABSZERO         = 1
+  val FULLZERO        = 2
+
+  val Vector          = 1
+  val Core            = 2
+  val Bad             = 255
 
   def readUnsignedHuff(src:Array[Byte]) : (Long, Int, Int) = {
     var rv:Long = 0
     var idx = 1
-
-
-    //println("src " + src.length + " : " + src.map("%02x" format _).mkString)
 
     def do_rest(iv:Long, itr:Int, n:Int) : (Long, Int) = {
       var r = iv

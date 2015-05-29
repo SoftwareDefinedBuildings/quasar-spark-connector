@@ -4,8 +4,11 @@ import java.util.{HashMap, UUID}
 
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.Superblock
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.qtree.QTree
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{StatRecord, Superblock}
 import org.bson.Document
+
+import scala.collection.mutable.ListBuffer
 
 /**
  * Created by almightykim on 5/10/15.
@@ -20,19 +23,16 @@ package object quasar {
   val HOUR = 60 * MINUTE
   val DAY = 24 * HOUR
   val ROOTPW = 56 //This makes each bucket at the root ~= 2.2 years
-
   //so the root spans 146.23 years
   val ROOTSTART = -1152921504606846976L //This makes the 16th bucket start at 1970 (0)
   val MinimumTime = -(16 << 56)
   val MaximumTime = (48 << 56)
   val LatestGeneration = Long.MaxValue //0xFFFFFFFF
 
-  val Vector = 1
-  val Core = 2
-  val Bad = 255
-
   @throws(classOf[Exception])
   def LoadSuperblock(id:UUID, generation:Long) : Superblock = {
+
+    println("quasar::LoadSuperblock")
 
     var rv: Superblock = null
 
@@ -70,6 +70,8 @@ package object quasar {
   @throws(classOf[Exception])
   def NewReadQTree(id:UUID, generation:Long) : QTree = {
 
+    println("quasar::NewReadQTree")
+
     val sb:Superblock = LoadSuperblock(id, generation)
 
     if (sb == null){
@@ -82,6 +84,26 @@ package object quasar {
       rv.root = rt
     }
     rv
+  }
+
+  @throws(classOf[Exception])
+  def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int): (Array[StatRecord], Long) = {
+
+    println("quasar::QueryStatisticalValues")
+
+    val bclear = ~((1<<pointwidth.intValue) - 1)
+    val st = start & bclear
+    val ed = (end & bclear) - 1
+
+    val tr:QTree = NewReadQTree(id, gen)
+
+    val rv:ListBuffer[StatRecord] = tr.QueryStatisticalValuesBlock(st, ed, pointwidth)
+
+    for (st <- rv){
+      println(st.toString)
+    }
+
+    (rv.toArray, tr.Generation())
   }
 
 

@@ -11,4 +11,6 @@ class StatRecord(
   val Max: Double
 ) {
 
+  override def toString: String = " Time [" + this.Time.toString + "] Count (" + this.Count.toString + ") Min <" + this.Min.toString + "> Mean {" + this.Mean.toString + "} Max [" + this.Max.toString + "]"
+
 }

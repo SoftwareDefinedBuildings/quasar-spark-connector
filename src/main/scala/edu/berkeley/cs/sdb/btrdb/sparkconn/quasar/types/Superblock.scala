@@ -20,7 +20,21 @@ class Superblock(
           document.get("unlinked").toString.toBoolean)
   }
 
-  def uid: String = uuid.toString
+  def Gen() : Long = {
+    this.gen
+  }
 
-  override def toString: String = " UUID [" + this.uid + "] GEN (" + gen.toString + ") ROOT < 0x" + root.toHexString + "> UNLINKED {" + unlinked.toString + "} "
+  def Root() : Long =  {
+    this.root
+  }
+
+  def Uuid() : UUID  = {
+    return this.uuid
+  }
+
+  def Unlinked() : Boolean = {
+    this.unlinked
+  }
+
+  override def toString: String = " UUID [" + this.uuid.toString + "] GEN (" + gen.toString + ") ROOT < 0x" + root.toHexString + "> UNLINKED {" + unlinked.toString + "} "
 }

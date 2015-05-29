@@ -1,8 +1,10 @@
-package edu.berkeley.cs.sdb.btrdb.sparkconn.quasar
+package edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.qtree
 
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{StatRecord, Block, Coreblock, Vectorblock}
-import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.{PWFACTOR, KFACTOR}
-import util.control.Breaks._
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.{KFACTOR, PWFACTOR}
+import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{Coreblock, StatRecord, Vectorblock}
+
+import scala.collection.mutable.ListBuffer
+import scala.util.control.Breaks._
 
 /**
  * Created by almightykim on 5/10/15.
@@ -86,18 +88,20 @@ class QTreeNode(
 
 
   def ClampBucket(t:Long) : Int = {
-    if (this.isLeaf) {
-      println("Not meant to use this on leaves")
-    }
 
     var rt = t
 
-    if (t < this.StartTime()) {
+    if (this.isLeaf) {
+      println("Not meant to use this on leaves")
+      return 0
+    }
+
+    if (rt < this.StartTime()) {
       rt = this.StartTime()
     }
     rt -= this.StartTime()
 
-    var rv = (rt >> this.PointWidth())
+    var rv = (rt >>> this.PointWidth())
     if (rv >= KFACTOR) {
       rv = (KFACTOR - 1)
     }
@@ -296,21 +300,35 @@ class QTreeNode(
   }
 
 
-  def QueryStatisticalValues(rv:StatRecord, start:Long, end:Long, pw:Int) : Unit = {
+  def QueryStatisticalValues(rv:ListBuffer[StatRecord], start:Long, end:Long, pw:Int) : Unit = {
+
+    println("QTreeNode::QueryStatisticalValues start <" + start.toString + "> end (" + end.toString + ") pw [" + pw.toString + "]")
 
     if (this.isLeaf) {
+
+      println("QTreeNode::QueryStatisticalValues::LeafNode")
+
       var idx:Long = 0
       breakable(while (idx < this.vector_block.Len) {
 
         if (this.vector_block.Time(idx.toInt) >= end) {
+          println("QTreeNode::QueryStatisticalValues (this.vector_block.Time(idx.toInt) >= end)")
+
           break
         }
 
         if (this.vector_block.Time(idx.toInt) > start) {
+
+          println("QTreeNode::QueryStatisticalValues (this.vector_block.Time(idx.toInt) > start)")
+
           val b = this.ClampVBucket(this.vector_block.Time(idx.toInt), pw)
           val (count, min, mean, max) = this.OpReduce(pw, b)
           if (count != 0)  {
-            val rv = new StatRecord(ArbitraryStartTime(b, pw), count, min, mean, max)
+
+            println("QTreeNode::QueryStatisticalValues::LeafNode ******************** StatRecord Created ********************")
+
+            val sr = new StatRecord(ArbitraryStartTime(b, pw), count, min, mean, max)
+            rv += sr
 
             //Skip over records in the vector that the PW included
             idx += (count - 1)
@@ -324,30 +342,60 @@ class QTreeNode(
 
     } else {
 
+      println("QTreeNode::QueryStatisticalValues::CoreNode")
+
       //Ok we are at the correct level and we are a core
       val sb = this.ClampBucket(start) //TODO check this function handles out of range
       val eb = this.ClampBucket(end)
 
+
+      println("QTreeNode::QueryStatisticalValues::CoreNode start (" + start.toString + ") sb <" + sb.toString + "> end (" + end.toString + ") eb <" + eb.toString + ">")
+      println("QTreeNode::QueryStatisticalValues::CoreNode StartTime (" + this.StartTime().toString + ") Pw <" + this.PointWidth().toString + ">")
+
       if (pw <= this.PointWidth()) {
-        for (b <- sb until eb) {
+
+        println("QTreeNode::QueryStatisticalValues::CoreNode (pw <= this.PointWidth())")
+
+        for (b <- sb until (eb + 1)) {
+
           val c = this.Child(b)
+
           if (c != null) {
+
+            println("QTreeNode::QueryStatisticalValues::CoreNode (pw <= this.PointWidth()) (c != null)")
             c.QueryStatisticalValues(rv, start, end, pw)
             c.Free()
             this.child_cache(b) = null
+
+          } else{
+
+            println("QTreeNode::QueryStatisticalValues::CoreNode (pw <= this.PointWidth()) (c == null)")
+
           }
+
         }
 
       } else {
+
+        println("QTreeNode::QueryStatisticalValues::CoreNode (pw > this.PointWidth())")
+
         val pwdelta = pw - this.PointWidth()
-        val sidx = sb >> pwdelta
-        val eidx = eb >> pwdelta
-        for (b <- sidx until eidx) {
+        val sidx = sb >>> pwdelta
+        val eidx = eb >>> pwdelta
+
+        println("QTreeNode::QueryStatisticalValues::CoreNode sidx (" + sidx.toString + ") eidx (" + eidx.toString + ")")
+
+        for (b <- sidx until (eidx + 1)) {
           val (count, min, mean, max) = this.OpReduce(pw, b)
           if (count != 0) {
-            val rv = new StatRecord(ArbitraryStartTime(b, pw), count, min, mean, max)
+
+            println("QTreeNode::QueryStatisticalValues::CoreNode ******************** StatRecord Created ********************")
+
+            val sr:StatRecord = new StatRecord(ArbitraryStartTime(b, pw), count, min, mean, max)
+            rv += sr
           }
         }
+
       }
     }
   }

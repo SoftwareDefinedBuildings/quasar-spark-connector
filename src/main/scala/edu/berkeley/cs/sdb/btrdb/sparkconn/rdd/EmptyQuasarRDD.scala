@@ -5,9 +5,6 @@ import org.apache.spark.{Partition, SparkContext, TaskContext}
 
 import scala.reflect.ClassTag
 
-/**
- * Created by almightykim on 5/2/15.
- */
 class EmptyQuasarRDD[R : ClassTag](
     @transient val sc: SparkContext,
     var connection: com.ceph.rados.Rados,

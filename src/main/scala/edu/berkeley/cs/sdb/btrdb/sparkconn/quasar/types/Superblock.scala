@@ -4,9 +4,6 @@ import java.util.UUID
 
 import org.bson.Document
 
-/**
- * Created by almightykim on 5/10/15.
- */
 class Superblock(
   val uuid:UUID,
   val gen:Long,

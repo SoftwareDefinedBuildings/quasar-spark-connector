@@ -6,9 +6,6 @@ import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{Coreblock, StatRecord, 
 import scala.collection.mutable.ListBuffer
 import scala.util.control.Breaks._
 
-/**
- * Created by almightykim on 5/10/15.
- */
 class QTreeNode(
   val tr: QTree,
   var vector_block: Vectorblock,

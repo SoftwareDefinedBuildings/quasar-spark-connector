@@ -5,9 +5,6 @@ import java.util.UUID
 
 import com.ceph.rados.{IoCTX, Rados}
 
-/**
- * Created by almightykim on 5/30/15.
- */
 package object cephprovider {
   //I"m going for one per core on a decent server
   val NUM_RHANDLES      = 40

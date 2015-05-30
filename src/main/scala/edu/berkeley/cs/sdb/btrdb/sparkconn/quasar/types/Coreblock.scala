@@ -4,9 +4,6 @@ import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.blockstore.{ABSZERO, Core, FUL
 
 import scala.util.control.Breaks._
 
-/**
- * Created by almightykim on 5/10/15.
- */
 class Coreblock(
    //Metadata, not copied on clone
    Identifier: Long,

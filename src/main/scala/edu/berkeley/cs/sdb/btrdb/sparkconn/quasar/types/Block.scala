@@ -1,8 +1,5 @@
 package edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types
 
-/**
- * Created by almightykim on 5/23/15.
- */
 abstract class Block(
   //Metadata, not copied on clone
   val Identifier: Long,

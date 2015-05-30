@@ -8,10 +8,6 @@ import scala.reflect.ClassTag
 //import org.apache.spark.metrics.InputMetricsUpdater
 import org.apache.spark.{Partition, SparkContext, TaskContext}
 
-/**
- * Created by almightykim on 5/2/15.
- */
-
 class QuasarQueryRDD[R] private[sparkconn] (
     @transient val sc: SparkContext,
     var connection: com.ceph.rados.Rados,

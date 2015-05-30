@@ -10,10 +10,6 @@ import org.bson.Document
 
 import scala.collection.mutable.ListBuffer
 
-/**
- * Created by almightykim on 5/10/15.
- */
-
 package object quasar {
 
   val MICROSECOND = 1000

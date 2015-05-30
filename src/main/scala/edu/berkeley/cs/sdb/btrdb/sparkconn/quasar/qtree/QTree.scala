@@ -5,9 +5,6 @@ import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types._
 
 import scala.collection.mutable.ListBuffer
 
-/**
- * Created by almightykim on 5/10/15.
- */
 class QTree (
   val sb:Superblock,
   val commited:Boolean) {

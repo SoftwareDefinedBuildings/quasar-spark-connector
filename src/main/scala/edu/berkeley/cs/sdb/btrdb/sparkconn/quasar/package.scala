@@ -28,8 +28,6 @@ package object quasar {
   @throws(classOf[Exception])
   def LoadSuperblock(id:UUID, generation:Long) : Superblock = {
 
-    println("quasar::LoadSuperblock")
-
     var rv: Superblock = null
 
     val connstr: MongoClientURI = new MongoClientURI("mongodb://192.168.1.110:27017")
@@ -68,8 +66,6 @@ package object quasar {
 
     val sb:Superblock = LoadSuperblock(id, generation)
 
-    println("NewReadQTree() uuid " + sb.Uuid().toString + " | gen " + sb.Gen().toString + " | root " + sb.Root().toString + " | generation " + generation.toString + "| ROOTPW " + ROOTPW.toString + " | ROOTSTART " + ROOTSTART.toString )
-
     if (sb == null){
       throw new Exception("No Such Stream!")
     }
@@ -89,15 +85,9 @@ package object quasar {
     val st = start & bclear
     val ed = (end & bclear) - 1
 
-    println("quasar::QueryStatisticalValues start <" + st.toString + "> end (" + ed.toString + ")")
-
     val tr:QTree = NewReadQTree(id, gen)
 
     val rv:ListBuffer[StatRecord] = tr.QueryStatisticalValuesBlock(st, ed, pointwidth)
-
-    for (st <- rv){
-      println(st.toString)
-    }
 
     (rv.toArray, tr.Generation())
   }

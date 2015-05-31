@@ -69,9 +69,6 @@ package object cephprovider {
     val id:Long = (address >>> 24) & 0x000000FFFFFFFFFFL
     val oid = make_object_id(uuid, id)
 
-    //handle_read :: uuid[20] (.CG_SYSTEM_REACT5359) | address 0x3008100000 | len 1048576 | offset 1048576 | id 0x3008 | oid 2e43475f53595354454d5f52454143540000003008
-    println("handle_read :: uuid[" + uuid.toString.length + "] (" + uuid.toString + ") | address " + address.toHexString + " | len " + len.toString +  " | offset " + offset.toString + " | id " + id.toHexString + " | oid " + oid )
-
     val cluster: Rados = new Rados("admin")
     println("Created cluster handle.")
 

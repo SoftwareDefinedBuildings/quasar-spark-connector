@@ -162,7 +162,6 @@ class QTreeNode(
 
 
   def Child(i:Int) : QTreeNode = {
-    //log.Debug("Child %v called on %v",i, n.TreePath())
     if (this.isLeaf) {
       println("Child of leaf?")
       return null
@@ -255,7 +254,7 @@ class QTreeNode(
             break
           }
 
-          if (this.vector_block.Time(i) > st) {
+          if (st <= this.vector_block.Time(i) ) {
             var v = this.vector_block.Value(i)
             sum += v
             if (!minset || v < min) {
@@ -297,33 +296,20 @@ class QTreeNode(
 
   def QueryStatisticalValues(rv:ListBuffer[StatRecord], start:Long, end:Long, pw:Int) : Unit = {
 
-    println("QTreeNode::QueryStatisticalValues start <" + start.toString + "> end (" + end.toString + ") pw [" + pw.toString + "]")
-
     if (this.isLeaf) {
-
-      println("QTreeNode::QueryStatisticalValues::LeafNode")
-
       var idx:Long = 0
       breakable(while (idx < this.vector_block.Len) {
 
         if (this.vector_block.Time(idx.toInt) >= end) {
-          println("QTreeNode::QueryStatisticalValues (this.vector_block.Time(idx.toInt) >= end)")
           break
         }
 
         if (start <= this.vector_block.Time(idx.toInt) ) {
-
-          println("QTreeNode::QueryStatisticalValues (this.vector_block.Time(idx.toInt) => start)")
-
           val b = this.ClampVBucket(this.vector_block.Time(idx.toInt), pw)
           val (count, min, mean, max) = this.OpReduce(pw, b)
           if (count != 0)  {
-
-            println("QTreeNode::QueryStatisticalValues::LeafNode ******************** StatRecord Created ********************")
-
             val sr = new StatRecord(ArbitraryStartTime(b, pw), count, min, mean, max)
             rv += sr
-
             //Skip over records in the vector that the PW included
             idx += (count - 1)
           }else{
@@ -339,50 +325,26 @@ class QTreeNode(
       //Ok we are at the correct level and we are a core
       val sb = this.ClampBucket(start) //TODO check this function handles out of range
       val eb = this.ClampBucket(end)
-
-      println("QTreeNode::QueryStatisticalValues::CoreNode start (" + start.toString + ") sb <" + sb.toString + "> end (" + end.toString + ") eb <" + eb.toString + ">")
-      println("QTreeNode::QueryStatisticalValues::CoreNode StartTime (" + this.StartTime().toString + ") Pw <" + this.PointWidth().toString + ">")
-
       if (pw <= this.PointWidth()) {
-
-        println("QTreeNode::QueryStatisticalValues::CoreNode (pw <= this.PointWidth())")
-
         for (b <- sb until (eb + 1)) {
-
           val c = this.Child(b)
-
           if (c != null) {
-
-            println("QTreeNode::QueryStatisticalValues::CoreNode (pw <= this.PointWidth()) (c != null)")
-
             c.QueryStatisticalValues(rv, start, end, pw)
             c.Free()
             this.child_cache(b) = null
           }
-
         }
-
       } else {
-
-        println("QTreeNode::QueryStatisticalValues::CoreNode (pw > this.PointWidth())")
-
         val pwdelta = pw - this.PointWidth()
         val sidx = sb >>> pwdelta
         val eidx = eb >>> pwdelta
-
-        println("QTreeNode::QueryStatisticalValues::CoreNode sidx (" + sidx.toString + ") eidx (" + eidx.toString + ")")
-
         for (b <- sidx until (eidx + 1)) {
           val (count, min, mean, max) = this.OpReduce(pw, b)
           if (count != 0) {
-
-            println("QTreeNode::QueryStatisticalValues::CoreNode ******************** StatRecord Created ********************")
-
             val sr:StatRecord = new StatRecord(ArbitraryStartTime(b, pw), count, min, mean, max)
             rv += sr
           }
         }
-
       }
     }
   }

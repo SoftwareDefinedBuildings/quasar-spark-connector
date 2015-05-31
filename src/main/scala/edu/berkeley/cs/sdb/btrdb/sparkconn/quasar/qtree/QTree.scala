@@ -22,8 +22,6 @@ class QTree (
   @throws(classOf[Exception])
   def LoadNode(addr:Long , impl_Generation:Long , impl_Pointwidth:Int, impl_StartTime:Long) : QTreeNode = {
 
-    println("\n\nQTree::LoadNode() addr " + addr.toHexString + " | impl_Generation " + impl_Generation.toString() +  " | impl_Pointwidth " + impl_Pointwidth.toString +  " | impl_StartTime " + impl_Pointwidth.toString)
-
     val n = new QTreeNode(this)
     ReadDatablock(n, sb.uuid, addr, impl_Generation, impl_Pointwidth, impl_StartTime)
 
@@ -46,8 +44,6 @@ class QTree (
 
   @throws(classOf[Exception])
   def QueryStatisticalValuesBlock(start:Long, end:Long, pw:Int) : ListBuffer[StatRecord] = {
-
-    println("QTree::QueryStatisticalValuesBlock start <" + start.toString + "> end (" + end.toString + ") pw [" + pw.toString + "]")
 
     val rv:ListBuffer[StatRecord] = new ListBuffer[StatRecord]()
     this.QueryStatisticalValues(rv, start, end, pw)

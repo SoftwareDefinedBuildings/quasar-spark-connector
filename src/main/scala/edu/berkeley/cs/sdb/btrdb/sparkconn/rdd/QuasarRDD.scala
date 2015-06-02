@@ -18,15 +18,15 @@ abstract class QuasarRDD[R : ClassTag]  (
     * Here SelfType is used to return a copy of the object - a different instance of the same type */
   type Self <: QuasarRDD[R]
 
-  protected def uid: String
+  def uid: String
 
-  protected def startTime: Long
+  def startTime: Long
 
-  protected def endTime: Long
+  def endTime: Long
 
-  protected def unitOfTime: String
+  def unitOfTime: String
 
-  protected def connection: com.ceph.rados.Rados
+  def pointWidth: Int
 
   def toVoidQuasarRDD: EmptyQuasarRDD[R]
 
@@ -36,15 +36,10 @@ abstract class QuasarRDD[R : ClassTag]  (
     startTime: Long = startTime,
     endTime: Long = endTime,
     unitOfTime: String = unitOfTime,
-    connection: com.ceph.rados.Rados = connection): Self
+    pointWidth: Int = pointWidth): Self
 
-  /** Returns a copy of this Quasar RDD with specified context */
-  def withConnection(connection: com.ceph.rados.Rados): Self = {
-    copy(connection = connection)
-  }
-
-  def withQueryParams(uid: String, startTime: Long, endTime: Long, unitOfTime: String ) : Self = {
-    copy(uid = uid, startTime = startTime, endTime = endTime, unitOfTime = unitOfTime )
+  def withQueryParams(uid: String, startTime: Long, endTime: Long, unitOfTime: String, pointWidth:Int) : Self = {
+    copy(uid = uid, startTime = startTime, endTime = endTime, unitOfTime = unitOfTime, pointWidth = pointWidth )
   }
 
 }

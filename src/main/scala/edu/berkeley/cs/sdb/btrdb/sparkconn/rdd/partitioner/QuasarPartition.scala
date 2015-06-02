@@ -1,14 +1,16 @@
 package edu.berkeley.cs.sdb.btrdb.sparkconn.rdd.partitioner
 
+import java.net.InetAddress
+
 import org.apache.spark.Partition
 
-class QuasarPartition private[sparkconn](
-    var rddId: Int,
-    var idx: Int)
+case class QuasarPartition private[sparkconn](
+    index: Int,
+    val startTime:Long,
+    val endTime:Long,
+    val node: String)
   extends Partition  {
 
-  override def hashCode(): Int = 41 * (41 + rddId) + idx
-
-  override val index: Int = idx
+  override def hashCode(): Int = (index + startTime.toInt + endTime.toInt)
 
 }

@@ -4,6 +4,7 @@ import java.util.{HashMap, UUID}
 
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
+import edu.berkeley.cs.sdb.btrdb.sparkconn.cephprovider.{CloseRadosConn, OpenRadosConn}
 import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.qtree.QTree
 import edu.berkeley.cs.sdb.btrdb.sparkconn.quasar.types.{StatRecord, Superblock}
 import org.bson.Document
@@ -79,7 +80,9 @@ package object quasar {
   }
 
   @throws(classOf[Exception])
-  def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int): (Array[StatRecord], Long) = {
+  def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int) : Iterator[StatRecord] = {
+
+    OpenRadosConn()
 
     val bclear = ~((1<<pointwidth.intValue) - 1)
     val st = start & bclear
@@ -89,7 +92,9 @@ package object quasar {
 
     val rv:ListBuffer[StatRecord] = tr.QueryStatisticalValuesBlock(st, ed, pointwidth)
 
-    (rv.toArray, tr.Generation())
+    CloseRadosConn()
+
+    rv.iterator
   }
 
 

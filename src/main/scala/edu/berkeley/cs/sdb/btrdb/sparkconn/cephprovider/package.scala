@@ -40,6 +40,33 @@ package object cephprovider {
 
   val nibbles:Array[Char] = Array[Char]('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f')
 
+  private var cephCluster:Rados = null
+  private var cephIo:IoCTX = null
+
+  def OpenRadosConn() : Unit = {
+    cephCluster = new Rados("admin")
+    println("Created cluster handle.")
+
+    val f: File = new File("/etc/ceph/ceph.conf")
+    cephCluster.confReadFile(f)
+    println("Read the configuration file.")
+
+    cephCluster.connect
+    println("Connected to the cluster.")
+
+    cephIo = cephCluster.ioCtxCreate("data")
+    println("close ioctx")
+  }
+
+  def CloseRadosConn() : Unit = {
+    cephCluster.ioCtxDestroy(cephIo)
+    println("destory cluster context")
+
+    cephCluster.shutDown()
+    println("close connection to cluster.")
+  }
+
+
   def make_object_id(uuid:UUID, address:Long) : String = {
 
     val uid = uuid.toString.replace("-","").toCharArray
@@ -68,7 +95,7 @@ package object cephprovider {
     val offset = address & 0xFFFFFF
     val id:Long = (address >>> 24) & 0x000000FFFFFFFFFFL
     val oid = make_object_id(uuid, id)
-
+/*
     val cluster: Rados = new Rados("admin")
     println("Created cluster handle.")
 
@@ -83,7 +110,10 @@ package object cephprovider {
 
     val buf:Array[Byte] = new Array[Byte](len.intValue)
     val rv:Int = io.read(oid, len.intValue, offset.longValue, buf)
+*/
 
+    val buf:Array[Byte] = new Array[Byte](len.intValue)
+    val rv:Int = cephIo.read(oid, len.intValue, offset.longValue, buf)
     //println("rc value : " + rv + " length requested : " + len)
 
     if (rv < 0)

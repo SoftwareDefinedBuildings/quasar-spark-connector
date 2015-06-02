@@ -7,11 +7,11 @@ import scala.reflect.ClassTag
 
 class EmptyQuasarRDD[R : ClassTag](
     @transient val sc: SparkContext,
-    var connection: com.ceph.rados.Rados,
-    var uid: String,
-    var startTime: Long,
-    var endTime: Long,
-    var unitOfTime: String)
+    val uid: String,
+    val startTime: Long,
+    val endTime: Long,
+    val unitOfTime: String,
+    val pointWidth:Int)
   extends QuasarRDD[R](sc, Seq.empty) {
 
   override type Self = EmptyQuasarRDD[R]
@@ -21,15 +21,15 @@ class EmptyQuasarRDD[R : ClassTag](
     startTime: Long = startTime,
     endTime: Long = endTime,
     unitOfTime: String = unitOfTime,
-    connection: com.ceph.rados.Rados = connection): Self = {
+    pointWidth: Int = pointWidth): Self = {
 
     new EmptyQuasarRDD[R](
       sc = sc,
-      connection = connection,
       uid = uid,
       startTime = startTime,
       endTime = endTime,
-      unitOfTime = unitOfTime
+      unitOfTime = unitOfTime,
+      pointWidth = pointWidth
     )
   }
 
@@ -38,8 +38,6 @@ class EmptyQuasarRDD[R : ClassTag](
   @DeveloperApi
   override def compute(split: Partition, context: TaskContext): Iterator[R] =
     throw new UnsupportedOperationException("Cannot call compute on an VoidQuasarRDD")
-
-  //override protected def connection: com.ceph.rados.Rados = throw new UnsupportedOperationException("Void Quasar RDD don't have context")
 
   override def toVoidQuasarRDD: EmptyQuasarRDD[R] = copy()
 

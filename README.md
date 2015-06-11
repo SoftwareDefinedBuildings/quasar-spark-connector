@@ -41,3 +41,9 @@ Centos
 
     sbt assembly  
 
+
+## TODO  
+1. Support creating RDD for unprocessed, raw time-series  
+2. Support Spark Stream  
+3. Error handling
+4. 

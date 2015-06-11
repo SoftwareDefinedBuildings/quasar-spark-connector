@@ -4,6 +4,7 @@ import edu.berkeley.eecs.btrdb.sparkconn.quasar.blockstore.{ABSZERO, Core, FULLZ
 
 import scala.util.control.Breaks._
 
+
 class Coreblock(
    //Metadata, not copied on clone
    Identifier: Long,
@@ -27,6 +28,7 @@ class Coreblock(
 
     if (src(0).toInt != Core) {
       println("This is not a core block")
+      return
     }
 
     var idx:Int = 1

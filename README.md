@@ -8,8 +8,8 @@ BTrDB - Spark Connector
 - [Ceph 0.8](https://ceph.com/category/releases/)
 - [BTrDB 3.0](https://github.com/SoftwareDefinedBuildings/quasar)    
 
-## Setup Rados-Java  
-* You must setup rados-java support across the entire cluster.  
+## 1. Setting-up Rados-Java  
+&dagger; You should setup rados-java support across the entire cluster prior to run the adapter.  
 
 ### Getting librados & libjna
 
@@ -36,4 +36,8 @@ Centos
     ant docs
 
 * try run [rados-java example](http://ceph.com/docs/master/rados/api/librados-intro/#id5) from Ceph and make sure it runs without extra java directive. Some platforms give you difficulties to link against librados or libjna.
+
+## 2. Building BTrDB Adapter  
+
+    sbt assembly  
 

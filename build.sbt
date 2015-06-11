@@ -10,10 +10,8 @@ unmanagedBase := baseDirectory.value / "lib"
 
 unmanagedJars in Compile += file("lib/rados-1.0-SNAPSHOT.jar")
 
-mainClass := Some("Main")
-
 libraryDependencies ++= Seq(
-  "org.apache.spark" %% "spark-core" % "1.2.0",
+  "org.apache.spark" %% "spark-core" % "1.2.0" % "provided",
+  "org.scala-lang" % "scala-library" % "2.10.4" % "provided",
   "org.mongodb" % "mongo-java-driver" % "3.0.1"
 )
-

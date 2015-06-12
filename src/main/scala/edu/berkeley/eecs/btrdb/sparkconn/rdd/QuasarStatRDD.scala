@@ -2,6 +2,7 @@ package edu.berkeley.eecs.btrdb.sparkconn.rdd
 
 import java.util.UUID
 
+import edu.berkeley.eecs.btrdb.sparkconn.cephprovider._
 import edu.berkeley.eecs.btrdb.sparkconn.quasar._
 import edu.berkeley.eecs.btrdb.sparkconn.quasar.types.StatRecord
 import edu.berkeley.eecs.btrdb.sparkconn.rdd.partitioner.QuasarPartition
@@ -61,14 +62,15 @@ class QuasarStatRDD private[sparkconn] (
   }
 
   override def getPartitions: Array[Partition] = {
-    logDebug("getPartitions")
+    println("getPartitions")
 
-    //TODO : fix this with config file
+    // TOOD : 1. fix this with config file. 2. size of data &  # of available spark, OSD nodes, and etc has to be taken
+    // into account
     val numPartitions:Int = 6
 
     val partitions:Array[Partition] = new Array[Partition](numPartitions)
     for (i <- 0 until numPartitions) {
-      partitions(i) = new QuasarPartition(i, startTime, endTime, "rasp-worker-%d".format(i))
+      partitions(i) = new QuasarPartition(numPartitions, i, startTime, endTime, "rasp-worker-%d".format(i))
     }
     partitions
   }
@@ -77,9 +79,27 @@ class QuasarStatRDD private[sparkconn] (
     Array(split.asInstanceOf[QuasarPartition].node).toSeq
 
   override def compute(split: Partition, context: TaskContext): Iterator[StatRecord] = {
+
     val partition = split.asInstanceOf[QuasarPartition]
-    logDebug("compute:: partition Index %d".format(partition.index))
-    QueryStatisticalValues(UUID.fromString("2e43475f-5359-5354-454d-5f5245414354"), 1364823796L, 1398437046L, LatestGeneration, 16)
+
+    //TOOD : pointWidth overlap between nodes, dividend inaccuracy need to be considered
+    val diff = ((endTime - startTime).toDouble / partition.partitionSize.toDouble).toLong
+
+    // local node start time
+    val lst = startTime + partition.index * diff
+
+    // local node end time
+    val led = lst + diff
+
+    println("compute:: partition [%d] uid %s, startTime [%d] endTime [%d] pointWidth <%d>".format(partition.index, uid, lst, led, pointWidth))
+
+    OpenRadosConn()
+
+    val rv:Iterator[StatRecord] = QueryStatisticalValues(UUID.fromString(uid), lst, led, LatestGeneration, pointWidth)
+
+    CloseRadosConn()
+
+    rv
   }
 
 }

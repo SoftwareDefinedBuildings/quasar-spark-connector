@@ -4,7 +4,6 @@ import java.util.{HashMap, UUID}
 
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
-import edu.berkeley.eecs.btrdb.sparkconn.cephprovider.{CloseRadosConn, OpenRadosConn}
 import edu.berkeley.eecs.btrdb.sparkconn.quasar.qtree.QTree
 import edu.berkeley.eecs.btrdb.sparkconn.quasar.types.{StatRecord, Superblock}
 import org.bson.Document
@@ -82,8 +81,6 @@ package object quasar {
   @throws(classOf[Exception])
   def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int) : Iterator[StatRecord] = {
 
-    OpenRadosConn()
-
     val bclear = ~((1<<pointwidth.intValue) - 1)
     val st = start & bclear
     val ed = (end & bclear) - 1
@@ -91,8 +88,6 @@ package object quasar {
     val tr:QTree = NewReadQTree(id, gen)
 
     val rv:ListBuffer[StatRecord] = tr.QueryStatisticalValuesBlock(st, ed, pointwidth)
-
-    CloseRadosConn()
 
     rv.iterator
   }

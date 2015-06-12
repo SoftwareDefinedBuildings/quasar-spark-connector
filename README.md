@@ -47,14 +47,13 @@ Centos
 ### Statistical Aggregator  
 Start spark shell with the adapter  
 
-```sh
-$ spark-shell --jars <path to the adapter jar>/quasar-spark-connector-1.0.jar  
-```
+    $ spark-shell --jars <path to the adapter jar>/quasar-spark-connector-assembly-1.0.jar  
 
 sc.quasarStatQuery("uuid", start-time, end-time, "unit-time", point-width)
     
-    > val qrdd = sc.quasarStatQuery("2e43475f-5359-5354-454d-5f5245414354", 1364823796L, 1398437046L, "ns", 16)
-    > qrdd.map(i => i.toString).collect.foreach(println)
+    scala> import edu.berkeley.eecs.btrdb.sparkconn._
+    scala> val qrdd = sc.quasarStatQuery("2e43475f-5359-5354-454d-5f5245414354", 1364823796L, 1398437046L, "ns", 16)
+    scala> qrdd.map(i => i.toString).collect.foreach(println)
 
 ## TODO  
 1. Support creating RDD for unprocessed, raw time-series  

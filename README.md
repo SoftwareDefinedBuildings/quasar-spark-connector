@@ -1,15 +1,15 @@
-# BTrDB - Spark Connector
+# BTrDB - Spark Connector  
 BTrDB - Spark Connector
 
-## Pre-requisites
+## 1. Pre-requisites
 
 - [Scala 2.10.4](http://www.scala-lang.org/download/2.10.4.html)  
 - [Spark 1.1.1](http://www.apache.org/dyn/closer.cgi/spark/spark-1.1.1/spark-1.1.1-bin-hadoop2.4.tgz)  
 - [Ceph 0.8](https://ceph.com/category/releases/)
 - [BTrDB 3.0](https://github.com/SoftwareDefinedBuildings/quasar)    
 
-## 1. Setting-up Rados-Java  
-&dagger; You should setup rados-java support across the entire cluster prior to run the adapter.  
+## 2. Setting-up Rados-Java  
+&dagger; You should setup rados-java support across the entire cluster prior to running the connector.  
 
 ### Getting librados & libjna
 
@@ -35,14 +35,15 @@ Centos
     # documentation
     ant docs
 
-* try run [rados-java example](http://ceph.com/docs/master/rados/api/librados-intro/#id5) from Ceph and make sure it runs without extra java directive. Some platforms give you difficulties to link against librados or libjna.
+* try run [rados-java example](http://ceph.com/docs/master/rados/api/librados-intro/#id5) and make sure it runs without extra java directives. Some platforms give you difficulties to link against librados or libjna.
 
-## 2. Building BTrDB Adapter  
+## 2. Building  
 
     sbt assembly  
 
 
 ## 3. Examples  
+&sect; Current implementation only works when all Spark executors are Ceph monitor at the same time.  
 
 ### Statistical Aggregator  
 Start spark shell with the adapter  
@@ -55,7 +56,7 @@ sc.quasarStatQuery("uuid", start-time, end-time, "unit-time", point-width)
     scala> val qrdd = sc.quasarStatQuery("2e43475f-5359-5354-454d-5f5245414354", 1364823796L, 1398437046L, "ns", 16)
     scala> qrdd.map(i => i.toString).collect.foreach(println)
 
-* Current implementation only works when all Spark executors are Ceph monitor at the same time.  
+
 
 ## TODO  
 1. Support creating RDD for unprocessed, raw time-series  

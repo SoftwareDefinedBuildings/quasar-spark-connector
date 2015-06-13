@@ -55,8 +55,10 @@ sc.quasarStatQuery("uuid", start-time, end-time, "unit-time", point-width)
     scala> val qrdd = sc.quasarStatQuery("2e43475f-5359-5354-454d-5f5245414354", 1364823796L, 1398437046L, "ns", 16)
     scala> qrdd.map(i => i.toString).collect.foreach(println)
 
+* Current implementation only works when all Spark executors are Ceph monitor at the same time.  
+
 ## TODO  
 1. Support creating RDD for unprocessed, raw time-series  
 2. Support Spark Stream  
 3. Error handling
-
+4. Fix an issue of inability to retrieve slave nodes info from SparkContext  

@@ -6,9 +6,14 @@ import edu.berkeley.eecs.btrdb.sparkconn.cephprovider._
 import edu.berkeley.eecs.btrdb.sparkconn.quasar._
 import edu.berkeley.eecs.btrdb.sparkconn.quasar.types.StatRecord
 import edu.berkeley.eecs.btrdb.sparkconn.rdd.partitioner.QuasarPartition
+import edu.berkeley.eecs.btrdb.sparkconn.util.BTrDBConf
 
 import scala.language.existentials
 import scala.reflect.ClassTag
+import java.io.FileInputStream
+import java.io.IOException
+import java.io.InputStream
+import java.util.Properties
 
 //import org.apache.spark.metrics.InputMetricsUpdater
 import org.apache.spark.{Partition, SparkContext, TaskContext}
@@ -23,6 +28,8 @@ class QuasarStatRDD private[sparkconn] (
   (implicit
    val classTag: ClassTag[StatRecord])
   extends QuasarRDD[StatRecord](sc, Seq.empty) {
+
+  private val qconf = new BTrDBConf("/etc/quasar/quasar.conf", "/etc/ceph/ceph.conf")
 
   override type Self = QuasarStatRDD
 
@@ -61,16 +68,52 @@ class QuasarStatRDD private[sparkconn] (
       )
   }
 
+
+  private def getActiveSlaves(sc: SparkContext): Set[String] = {
+
+    val drvhost: String = sc.getConf.get("spark.driver.host")
+    var slaves = Set[String]()
+    var nhFound: Boolean = true
+    val st = System.currentTimeMillis
+    var timeout = false
+    while (nhFound && !timeout) {
+      Thread.sleep(3000)
+      val old = slaves
+      val allnodes = sc.getExecutorMemoryStatus.map(_._1.replace(" ", "").split(":")(0)).toSet
+      slaves = allnodes.diff(Set(drvhost))
+      nhFound = slaves.diff(old).nonEmpty
+      if (System.currentTimeMillis - st >= 30000)
+        timeout = true
+    }
+    slaves
+  }
+
   override def getPartitions: Array[Partition] = {
-    println("getPartitions")
+    //TOOD : 1. size of data. 2 # of available spark have to be taken into account
+/*
+    this whole part does not work due to spark 1.1.1 issue. :(
 
-    // TOOD : 1. fix this with config file. 2. size of data &  # of available spark, OSD nodes, and etc has to be taken
-    // into account
-    val numPartitions:Int = 6
+    // spark executors
+    val slaves = getActiveSlaves(sc)
 
-    val partitions:Array[Partition] = new Array[Partition](numPartitions)
-    for (i <- 0 until numPartitions) {
-      partitions(i) = new QuasarPartition(numPartitions, i, startTime, endTime, "rasp-worker-%d".format(i))
+    // ceph monitors
+    val cmons = qconf.getCephMons
+
+    val parts = slaves.intersect(cmons).toList
+*/
+
+    // this is temp. measure assuming that all the ceph nodes are spark nodes at the same time. :[
+    val drvhost: String = sc.getConf.get("spark.driver.host")
+    val cmons = qconf.getCephMons
+    val parts = cmons.diff(Set(drvhost)).toList
+    val numParts:Int = parts.size
+
+    // for Spark 1.2.0 we can ask if this much executors are available in the cluster
+    //sc.requestExecutors(numParts);
+
+    val partitions:Array[Partition] = new Array[Partition](numParts)
+    for (i <- 0 until numParts) {
+      partitions(i) = new QuasarPartition(numParts, i, startTime, endTime, parts(i))
     }
     partitions
   }
@@ -95,16 +138,11 @@ class QuasarStatRDD private[sparkconn] (
 
     OpenRadosConn()
 
-    val rv:Iterator[StatRecord] = QueryStatisticalValues(UUID.fromString(uid), lst, led, LatestGeneration, pointWidth)
+    val rv:Iterator[StatRecord] = QueryStatisticalValues(qconf, UUID.fromString(uid), lst, led, LatestGeneration, pointWidth)
 
     CloseRadosConn()
 
     rv
   }
-
-}
-
-
-object QuasarStatRDD {
 
 }

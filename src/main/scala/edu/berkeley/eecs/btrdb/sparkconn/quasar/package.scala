@@ -1,11 +1,13 @@
 package edu.berkeley.eecs.btrdb.sparkconn
 
-import java.util.{HashMap, UUID}
+import java.io.FileInputStream
+import java.util.{Properties, HashMap, UUID}
 
 import com.mongodb.client.{MongoCollection, MongoDatabase}
 import com.mongodb.{MongoClient, MongoClientURI}
 import edu.berkeley.eecs.btrdb.sparkconn.quasar.qtree.QTree
 import edu.berkeley.eecs.btrdb.sparkconn.quasar.types.{StatRecord, Superblock}
+import edu.berkeley.eecs.btrdb.sparkconn.util.BTrDBConf
 import org.bson.Document
 
 import scala.collection.mutable.ListBuffer
@@ -26,13 +28,16 @@ package object quasar {
   val LatestGeneration = Long.MaxValue //0xFFFFFFFF
 
   @throws(classOf[Exception])
-  def LoadSuperblock(id:UUID, generation:Long) : Superblock = {
+  def LoadSuperblock(bconf:BTrDBConf, id:UUID, generation:Long) : Superblock = {
 
+    val mserver = bconf.getMongoServer
+    val qcoll:String = bconf.getQuasarCollection
     var rv: Superblock = null
 
-    val connstr: MongoClientURI = new MongoClientURI("mongodb://192.168.1.110:27017")
+    val connstr: MongoClientURI = new MongoClientURI("mongodb://" + mserver + ":27017")
     val client: MongoClient = new MongoClient(connstr)
-    val db: MongoDatabase = client.getDatabase("quasar")
+    val db: MongoDatabase = client.getDatabase(qcoll)
+
     val coll: MongoCollection[Document] = db.getCollection("superblocks")
 
     if (generation == LatestGeneration) {
@@ -62,9 +67,9 @@ package object quasar {
   }
 
   @throws(classOf[Exception])
-  def NewReadQTree(id:UUID, generation:Long) : QTree = {
+  def NewReadQTree(bconf:BTrDBConf, id:UUID, generation:Long) : QTree = {
 
-    val sb:Superblock = LoadSuperblock(id, generation)
+    val sb:Superblock = LoadSuperblock(bconf:BTrDBConf, id, generation)
 
     if (sb == null){
       throw new Exception("No Such Stream!")
@@ -79,13 +84,13 @@ package object quasar {
   }
 
   @throws(classOf[Exception])
-  def QueryStatisticalValues(id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int) : Iterator[StatRecord] = {
+  def QueryStatisticalValues(bconf:BTrDBConf, id:UUID, start:Long, end:Long, gen:Long, pointwidth:Int) : Iterator[StatRecord] = {
 
     val bclear = ~((1<<pointwidth.intValue) - 1)
     val st = start & bclear
     val ed = (end & bclear) - 1
 
-    val tr:QTree = NewReadQTree(id, gen)
+    val tr:QTree = NewReadQTree(bconf, id, gen)
 
     val rv:ListBuffer[StatRecord] = tr.QueryStatisticalValuesBlock(st, ed, pointwidth)
 

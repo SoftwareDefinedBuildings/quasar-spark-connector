@@ -6,7 +6,7 @@ BTrDB - Spark Connector
 - [Scala 2.10.4](http://www.scala-lang.org/download/2.10.4.html)  
 - [Spark 1.1.1](http://www.apache.org/dyn/closer.cgi/spark/spark-1.1.1/spark-1.1.1-bin-hadoop2.4.tgz)  
 - [Ceph 0.8](https://ceph.com/category/releases/)
-- [BTrDB 3.0](https://github.com/SoftwareDefinedBuildings/quasar)    
+- [BTrDB 3.0](https://github.com/SoftwareDefinedBuildings/btrdb/releases/tag/quasar-final)    
 
 ## 2. Setting-up Rados-Java  
 &dagger; You should setup rados-java support across the entire cluster prior to running the connector.  
@@ -60,6 +60,7 @@ sc.quasarStatQuery("uuid", start-time, end-time, "unit-time", point-width)
 
 ## TODO  
 1. Support creating RDD for unprocessed, raw time-series  
-2. Support Spark Stream  
-3. Error handling
-4. Fix an issue of inability to retrieve slave nodes info from SparkContext  
+2. Fix an issue of inability to retrieve slave nodes info from SparkContext  
+3. Support unified timeframe across multiple sensors  
+4. Support Spark Stream  
+5. Error handling  
